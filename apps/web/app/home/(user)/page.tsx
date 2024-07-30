@@ -6,6 +6,7 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
 import { HomeLayoutPageHeader } from './_components/home-page-header';
+import { HomeAccountsList } from './_components/home-accounts-list';
 
 export const generateMetadata = async () => {
   const i18n = await createI18nServerInstance();
@@ -24,7 +25,9 @@ function UserHomePage() {
         description={<Trans i18nKey={'common:homeTabDescription'} />}
       />
 
-      <PageBody></PageBody>
+      <PageBody>
+        <HomeAccountsList />
+      </PageBody>
     </>
   );
 }

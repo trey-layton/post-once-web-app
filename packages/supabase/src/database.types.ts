@@ -248,118 +248,63 @@ export type Database = {
         }
         Relationships: []
       }
-      conversations: {
+      integrations: {
         Row: {
+          access_token: string
+          account_id: string
+          avatar: string | null
           created_at: string
+          expires_in: number | null
           id: string
-          reference_id: string
-          user_email: string | null
+          provider: Database["public"]["Enums"]["integration_provider"]
+          refresh_token: string | null
+          updated_at: string
+          username: string | null
         }
         Insert: {
+          access_token: string
+          account_id: string
+          avatar?: string | null
           created_at?: string
+          expires_in?: number | null
           id?: string
-          reference_id: string
-          user_email?: string | null
+          provider: Database["public"]["Enums"]["integration_provider"]
+          refresh_token?: string | null
+          updated_at?: string
+          username?: string | null
         }
         Update: {
+          access_token?: string
+          account_id?: string
+          avatar?: string | null
           created_at?: string
+          expires_in?: number | null
           id?: string
-          reference_id?: string
-          user_email?: string | null
-        }
-        Relationships: []
-      }
-      documents: {
-        Row: {
-          content: string
-          created_at: string
-          hash: string
-          id: string
-          title: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          hash: string
-          id?: string
-          title: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          hash?: string
-          id?: string
-          title?: string
-        }
-        Relationships: []
-      }
-      documents_embeddings: {
-        Row: {
-          content: string
-          created_at: string
-          embedding: string | null
-          id: string
-          metadata: Json
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          embedding?: string | null
-          id?: string
-          metadata?: Json
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          embedding?: string | null
-          id?: string
-          metadata?: Json
-        }
-        Relationships: []
-      }
-      feedback_submissions: {
-        Row: {
-          attachment_url: string | null
-          created_at: string
-          device_info: Json | null
-          email: string | null
-          id: number
-          metadata: Json | null
-          screen_name: string | null
-          text: string
-          type: Database["public"]["Enums"]["feedback_type"]
-          user_id: string | null
-        }
-        Insert: {
-          attachment_url?: string | null
-          created_at?: string
-          device_info?: Json | null
-          email?: string | null
-          id?: number
-          metadata?: Json | null
-          screen_name?: string | null
-          text: string
-          type: Database["public"]["Enums"]["feedback_type"]
-          user_id?: string | null
-        }
-        Update: {
-          attachment_url?: string | null
-          created_at?: string
-          device_info?: Json | null
-          email?: string | null
-          id?: number
-          metadata?: Json | null
-          screen_name?: string | null
-          text?: string
-          type?: Database["public"]["Enums"]["feedback_type"]
-          user_id?: string | null
+          provider?: Database["public"]["Enums"]["integration_provider"]
+          refresh_token?: string | null
+          updated_at?: string
+          username?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "feedback_submissions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "integrations_account_id_fkey"
+            columns: ["account_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integrations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_account_workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integrations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -433,41 +378,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["name"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          conversation_id: string
-          created_at: string
-          id: number
-          sender: Database["public"]["Enums"]["sender"]
-          text: string
-          type: Database["public"]["Enums"]["message_type"]
-        }
-        Insert: {
-          conversation_id: string
-          created_at?: string
-          id?: number
-          sender: Database["public"]["Enums"]["sender"]
-          text: string
-          type: Database["public"]["Enums"]["message_type"]
-        }
-        Update: {
-          conversation_id?: string
-          created_at?: string
-          id?: number
-          sender?: Database["public"]["Enums"]["sender"]
-          text?: string
-          type?: Database["public"]["Enums"]["message_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -806,27 +716,6 @@ export type Database = {
           },
         ]
       }
-      waitlist: {
-        Row: {
-          approved: boolean
-          created_at: string
-          email: string
-          id: number
-        }
-        Insert: {
-          approved?: boolean
-          created_at?: string
-          email: string
-          id?: number
-        }
-        Update: {
-          approved?: boolean
-          created_at?: string
-          email?: string
-          id?: number
-        }
-        Relationships: []
-      }
     }
     Views: {
       user_account_workspace: {
@@ -1023,31 +912,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      kw_match_documents: {
-        Args: {
-          query_text: string
-          match_count: number
-        }
-        Returns: {
-          id: string
-          content: string
-          metadata: Json
-          similarity: number
-        }[]
-      }
-      match_documents: {
-        Args: {
-          query_embedding: string
-          match_count?: number
-          filter?: Json
-        }
-        Returns: {
-          id: string
-          content: string
-          metadata: Json
-          similarity: number
-        }[]
-      }
       team_account_workspace: {
         Args: {
           account_slug: string
@@ -1135,13 +999,13 @@ export type Database = {
         | "settings.manage"
         | "members.manage"
         | "invites.manage"
+        | "integrations.update"
+        | "integrations.delete"
       billing_provider: "stripe" | "lemon-squeezy" | "paddle"
-      feedback_type: "question" | "bug" | "feedback"
-      message_type: "ai" | "db" | "user"
+      integration_provider: "linkedin" | "twitter" | "threads"
       notification_channel: "in_app" | "email"
       notification_type: "info" | "warning" | "error"
       payment_status: "pending" | "succeeded" | "failed"
-      sender: "user" | "assistant"
       subscription_item_type: "flat" | "per_seat" | "metered"
       subscription_status:
         | "active"

@@ -18,7 +18,7 @@
     "with-env": "dotenv -e ./.env.local --",
     "with-env:test": "dotenv -e ./.env.test --",
     "supabase": "supabase",
-    "supabase:start": "supabase status || supabase start",
+    "supabase:start": "supabase status || supabase start --ignore-health-check",
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "supabase:status": "supabase status",
