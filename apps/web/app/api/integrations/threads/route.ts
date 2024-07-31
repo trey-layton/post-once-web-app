@@ -13,8 +13,19 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const account = searchParams.get('account');
-  const slug = searchParams.get('slug');
+  const state = searchParams.get('state');
+
+  let account = '';
+  let slug = '';
+  if (state) {
+    try {
+      const parsedState = JSON.parse(decodeURIComponent(state));
+      account = parsedState.account;
+      slug = parsedState.slug;
+    } catch (error) {
+      console.error('Failed to parse state:', error);
+    }
+  }
 
   if (!code || !account || !slug) {
     return NextResponse.redirect(
