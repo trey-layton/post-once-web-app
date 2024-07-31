@@ -44,7 +44,7 @@ export default async function IntegrationsPage({
     {
       name: 'threads',
       label: 'Threads',
-      authUrl: '',
+      authUrl: `https://threads.net/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_THREADS_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_THREADS_REDIRECT_URI}?account=${workspace.account.id}&slug=${params.account}`)}&scope=threads_basic,threads_content_publish&response_type=code`,
     },
   ];
 
