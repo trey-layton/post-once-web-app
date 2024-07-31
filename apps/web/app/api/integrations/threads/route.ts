@@ -45,7 +45,7 @@ export async function GET(request: Request) {
         client_id: process.env.NEXT_PUBLIC_THREADS_CLIENT_ID ?? '',
         client_secret: process.env.THREADS_CLIENT_SECRET ?? '',
         grant_type: 'authorization_code',
-        redirect_uri: `${process.env.NEXT_PUBLIC_THREADS_REDIRECT_URI}?account=${account}&slug=${slug}`,
+        redirect_uri: process.env.NEXT_PUBLIC_THREADS_REDIRECT_URI ?? '',
         code,
       }),
     },
