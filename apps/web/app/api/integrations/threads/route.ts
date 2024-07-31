@@ -24,6 +24,10 @@ export async function GET(request: Request) {
       slug = parsedState.slug;
     } catch (error) {
       console.error('Failed to parse state:', error);
+      return NextResponse.json(
+        { error: 'Failed to parse state' },
+        { status: 400 },
+      );
     }
   }
 
@@ -47,28 +51,88 @@ export async function GET(request: Request) {
     },
   );
 
+  if (!shortLivedTokenResponse.ok) {
+    const errorData = await shortLivedTokenResponse.json();
+    console.error('Failed to fetch short-lived token:', errorData);
+    return NextResponse.json(
+      { error: 'Failed to fetch short-lived token', details: errorData },
+      { status: shortLivedTokenResponse.status },
+    );
+  }
+
+  const shortLivedTokenJson = await shortLivedTokenResponse.json();
   const shortLivedTokenData = z
     .object({ access_token: z.string(), user_id: z.number() })
-    .parse(await shortLivedTokenResponse.json());
+    .safeParse(shortLivedTokenJson);
+
+  if (!shortLivedTokenData.success) {
+    console.error(
+      'Failed to parse short-lived token:',
+      shortLivedTokenData.error,
+    );
+    return NextResponse.json(
+      {
+        error: 'Failed to parse short-lived token',
+        details: shortLivedTokenData.error,
+        json: shortLivedTokenJson,
+      },
+      { status: 500 },
+    );
+  }
 
   const longLivedTokenResponse = await fetch(
-    `https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${process.env.THREADS_CLIENT_SECRET}&access_token=${shortLivedTokenData.access_token}`,
+    `https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${process.env.THREADS_CLIENT_SECRET}&access_token=${shortLivedTokenData.data.access_token}`,
     {
       method: 'GET',
     },
   );
 
+  if (!longLivedTokenResponse.ok) {
+    const errorData = await longLivedTokenResponse.json();
+    console.error('Failed to fetch long-lived token:', errorData);
+    return NextResponse.json(
+      { error: 'Failed to fetch long-lived token', details: errorData },
+      { status: longLivedTokenResponse.status },
+    );
+  }
+
+  const longLivedTokenJson = await longLivedTokenResponse.json();
   const longLivedTokenData = z
     .object({ access_token: z.string(), expires_in: z.number() })
-    .parse(await longLivedTokenResponse.json());
+    .safeParse(longLivedTokenJson);
+
+  if (!longLivedTokenData.success) {
+    console.error(
+      'Failed to parse long-lived token:',
+      longLivedTokenData.error,
+    );
+    return NextResponse.json(
+      {
+        error: 'Failed to parse long-lived token',
+        details: longLivedTokenData.error,
+        json: longLivedTokenJson,
+      },
+      { status: 500 },
+    );
+  }
 
   const userInfoResponse = await fetch(
-    `https://graph.threads.net/v1.0/me?fields=id,username,threads_profile_picture_url,threads_biography&access_token=${longLivedTokenData.access_token}`,
+    `https://graph.threads.net/v1.0/me?fields=id,username,threads_profile_picture_url,threads_biography&access_token=${longLivedTokenData.data.access_token}`,
     {
       method: 'GET',
     },
   );
 
+  if (!userInfoResponse.ok) {
+    const errorData = await userInfoResponse.json();
+    console.error('Failed to fetch user info:', errorData);
+    return NextResponse.json(
+      { error: 'Failed to fetch user info', details: errorData },
+      { status: userInfoResponse.status },
+    );
+  }
+
+  const userInfoJson = await userInfoResponse.json();
   const userInfo = z
     .object({
       id: z.string(),
@@ -76,7 +140,19 @@ export async function GET(request: Request) {
       threads_profile_picture_url: z.string().optional(),
       threads_biography: z.string().optional(),
     })
-    .parse(await userInfoResponse.json());
+    .safeParse(userInfoJson);
+
+  if (!userInfo.success) {
+    console.error('Failed to parse user info:', userInfo.error);
+    return NextResponse.json(
+      {
+        error: 'Failed to parse user info',
+        details: userInfo.error,
+        json: userInfoJson,
+      },
+      { status: 500 },
+    );
+  }
 
   const client = getSupabaseRouteHandlerClient({ admin: true });
   const integrationsService = createIntegrationsService(client);
@@ -85,10 +161,10 @@ export async function GET(request: Request) {
     await integrationsService.addIntegration({
       accountId: account,
       provider: 'threads',
-      accessToken: longLivedTokenData.access_token,
-      expiresIn: longLivedTokenData.expires_in,
-      username: userInfo.username,
-      avatar: userInfo.threads_profile_picture_url,
+      accessToken: longLivedTokenData.data.access_token,
+      expiresIn: longLivedTokenData.data.expires_in,
+      username: userInfo.data.username,
+      avatar: userInfo.data.threads_profile_picture_url,
     });
   } catch (error) {
     console.error(error);
