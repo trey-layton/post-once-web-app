@@ -11,7 +11,13 @@ import { Tables } from '~/lib/database.types';
 type Integrations = Tables<'integrations'>;
 
 export default function IntegrationsDataTable(props: { data: Integrations[] }) {
-  return <DataTable {...props} columns={getColumns()} />;
+  return (
+    <DataTable
+      {...props}
+      columns={getColumns()}
+      noDataMessage="No accounts added"
+    />
+  );
 }
 
 function getColumns(): ColumnDef<Integrations>[] {
@@ -40,7 +46,7 @@ function getColumns(): ColumnDef<Integrations>[] {
       cell() {
         return (
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" className="text-sm">
+            <Button variant="outline" size="sm" className="text-sm" disabled>
               Delete
             </Button>
           </div>

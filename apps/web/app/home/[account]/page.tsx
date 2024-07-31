@@ -1,41 +1,23 @@
-import loadDynamic from 'next/dynamic';
+import { LinkedInLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 
-import { PlusCircle } from 'lucide-react';
-
-import { Button } from '@kit/ui/button';
+import { getSupabaseServerComponentClient } from '@kit/supabase/server-component-client';
+import { createTeamAccountsApi } from '@kit/team-accounts/api';
+import { buttonVariants } from '@kit/ui/button';
+import { Card } from '@kit/ui/card';
 import { PageBody } from '@kit/ui/page';
-import { Spinner } from '@kit/ui/spinner';
-import { Trans } from '@kit/ui/trans';
+import { cn } from '@kit/ui/utils';
 
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-import { withI18n } from '~/lib/i18n/with-i18n';
+import { createIntegrationsService } from '~/lib/integrations/integrations.service';
 
+import ContentHubForm from './_components/content-hub-form';
+import IntegrationsDataTable from './_components/integrations-data-table';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
+import ThreadsLogoIcon from './_components/threads-logo-icon';
 
 interface Params {
   account: string;
 }
-
-const DashboardDemo = loadDynamic(
-  () => import('./_components/dashboard-demo'),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className={
-          'flex h-full flex-1 flex-col items-center justify-center space-y-4' +
-          ' py-24'
-        }
-      >
-        <Spinner />
-
-        <div>
-          <Trans i18nKey={'common:loading'} />
-        </div>
-      </div>
-    ),
-  },
-);
 
 export const generateMetadata = async () => {
   const i18n = await createI18nServerInstance();
@@ -46,25 +28,93 @@ export const generateMetadata = async () => {
   };
 };
 
-function TeamAccountHomePage({ params }: { params: Params }) {
+//!DON'T HARDCODE
+const codeChallenge = 'sU8s5R59RD6TmljksbSQpAhuXeYQ7d7wGc1SFJnhV3c';
+
+export default async function TeamAccountHomePage({
+  params,
+}: {
+  params: Params;
+}) {
+  const supabase = getSupabaseServerComponentClient();
+  const api = createTeamAccountsApi(supabase);
+  const integrationsService = createIntegrationsService(supabase);
+
+  const team = await api.getTeamAccount(params.account);
+  const { data } = await integrationsService.getIntegrations({
+    accountSlug: params.account,
+  });
+
+  const providers = [
+    {
+      name: 'linkedin',
+      label: 'LinkedIn',
+      authUrl: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=openid%20profile%20email`,
+      icon: <LinkedInLogoIcon className="h-5 w-5" />,
+    },
+    {
+      name: 'twitter',
+      label: 'Twitter',
+      authUrl: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_TWITTER_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=${encodeURIComponent(params.account)}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
+      icon: <TwitterLogoIcon className="h-5 w-5" />,
+    },
+    {
+      name: 'threads',
+      label: 'Threads',
+      authUrl: `https://threads.net/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_THREADS_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://post-once-web-app.vercel.app/api/integrations/threads')}&scope=threads_basic,threads_content_publish&response_type=code&state=${encodeURIComponent(JSON.stringify({ account: team.id, slug: params.account }))}`,
+      icon: <ThreadsLogoIcon width={20} height={20} />,
+    },
+  ];
   return (
     <>
       <TeamAccountLayoutPageHeader
         account={params.account}
-        title={<Trans i18nKey={'common:dashboardTabLabel'} />}
-        description={<Trans i18nKey={'common:dashboardTabDescription'} />}
-      >
-        <Button>
-          <PlusCircle className={'mr-1 h-4'} />
-          <span>Add Widget</span>
-        </Button>
-      </TeamAccountLayoutPageHeader>
-
+        title="Dashboard"
+        description="Manage your accounts and content here."
+      ></TeamAccountLayoutPageHeader>
       <PageBody>
-        <DashboardDemo />
+        <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-8">
+          <Card className="w-full p-4 md:w-1/2">
+            <div className="text-lg font-semibold">Connected Accounts</div>
+            <div className="text-sm text-muted-foreground">
+              Quickly access your content repurposing tools.
+            </div>
+            <div className="mt-8 space-y-6">
+              {providers.map((provider, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {provider.icon}
+                      <h3 className="text-base font-semibold">
+                        {provider.label}
+                      </h3>
+                    </div>
+                    <a
+                      href={provider.authUrl}
+                      className={cn(
+                        buttonVariants({ size: 'sm' }),
+                        'w-fit text-sm',
+                      )}
+                    >
+                      New
+                    </a>
+                  </div>
+                  <IntegrationsDataTable
+                    data={data.filter((i) => i.provider === provider.name)}
+                  />
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="h-fit w-full p-4 md:w-1/2">
+            <div className="text-lg font-semibold">Content Hub</div>
+            <div className="text-sm text-muted-foreground">
+              Easily access the main features of the tool.
+            </div>
+            <ContentHubForm />
+          </Card>
+        </div>
       </PageBody>
     </>
   );
 }
-
-export default withI18n(TeamAccountHomePage);
