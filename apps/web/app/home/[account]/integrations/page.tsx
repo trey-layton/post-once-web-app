@@ -8,6 +8,9 @@ import { createIntegrationsService } from '~/lib/integrations/integrations.servi
 import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
 import IntegrationsDataTable from './_components/integrations-data-table';
 
+//!DON'T HARDCODE
+const codeChallenge = 'sU8s5R59RD6TmljksbSQpAhuXeYQ7d7wGc1SFJnhV3c';
+
 interface IntegrationsPageProps {
   params: {
     account: string;
@@ -27,18 +30,16 @@ export default async function IntegrationsPage({
     accountSlug: params.account,
   });
 
-  const linkedInAuthUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI}?account=${workspace.account.id}&slug=${params.account}`)}&scope=openid%20profile%20email`;
-
   const providers = [
     {
       name: 'linkedin',
       label: 'LinkedIn',
-      authUrl: linkedInAuthUrl,
+      authUrl: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI}?account=${workspace.account.id}&slug=${params.account}`)}&scope=openid%20profile%20email`,
     },
     {
       name: 'twitter',
       label: 'Twitter',
-      authUrl: '',
+      authUrl: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_TWITTER_REDIRECT_URI}?account=${workspace.account.id}&slug=${params.account}`)}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=${encodeURIComponent(params.account)}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
     },
     {
       name: 'threads',
