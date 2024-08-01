@@ -1,4 +1,4 @@
-import { LinkedInLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
+import { LinkedInLogoIcon } from '@radix-ui/react-icons';
 
 import { getSupabaseServerComponentClient } from '@kit/supabase/server-component-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
@@ -16,6 +16,7 @@ import ContentHubForm from './_components/content-hub-form';
 import IntegrationsDataTable from './_components/integrations-data-table';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
 import ThreadsLogoIcon from './_components/threads-logo-icon';
+import XLogoIcon from './_components/x-logo-icon';
 
 interface Params {
   account: string;
@@ -60,7 +61,7 @@ export default async function TeamAccountHomePage({
       name: 'twitter',
       label: 'Twitter',
       authUrl: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_TWITTER_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=${encodeURIComponent(params.account)}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
-      icon: <TwitterLogoIcon className="h-5 w-5" />,
+      icon: <XLogoIcon className="h-5 w-5" />,
     },
     {
       name: 'threads',
