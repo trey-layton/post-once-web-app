@@ -34,6 +34,58 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_profiles: {
+        Row: {
+          account_id: string
+          beehiiv_api_key: string | null
+          created_at: string
+          example_tweet: string | null
+          publication_id: string | null
+          subscribe_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          beehiiv_api_key?: string | null
+          created_at?: string
+          example_tweet?: string | null
+          publication_id?: string | null
+          subscribe_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          beehiiv_api_key?: string | null
+          created_at?: string
+          example_tweet?: string | null
+          publication_id?: string | null
+          subscribe_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_account_workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           created_at: string | null
@@ -1001,6 +1053,8 @@ export type Database = {
         | "invites.manage"
         | "integrations.update"
         | "integrations.delete"
+        | "account_profiles.update"
+        | "account_profiles.delete"
       billing_provider: "stripe" | "lemon-squeezy" | "paddle"
       integration_provider: "linkedin" | "twitter" | "threads"
       notification_channel: "in_app" | "email"

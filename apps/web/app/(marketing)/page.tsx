@@ -27,34 +27,33 @@ function Home() {
       <Hero
         pill={
           <Pill label={'New'}>
-            <span>The leading SaaS Starter Kit for ambitious developers</span>
+            <span>Create original content in seconds</span>
           </Pill>
         }
         title={
           <>
-            <span>The ultimate SaaS Starter</span>
-            <span>for your next project</span>
+            <span>Transform your Newsletter</span>
+            <span>into Social Media Content</span>
           </>
         }
         subtitle={
           <span>
-            Build and Ship a SaaS faster than ever before with the next-gen SaaS
-            Starter Kit. Ship your SaaS in days, not months.
+            AI-powered content repurposing for busy newsletter writers
           </span>
         }
         cta={<MainCallToActionButton />}
-        image={
-          <Image
-            priority
-            className={
-              'delay-250 rounded-2xl border border-gray-200 duration-1000 ease-out animate-in fade-in zoom-in-50 fill-mode-both dark:border-primary/10'
-            }
-            width={3558}
-            height={2222}
-            src={`/images/dashboard.webp`}
-            alt={`App Image`}
-          />
-        }
+        // image={
+        //   <Image
+        //     priority
+        //     className={
+        //       'delay-250 rounded-2xl border border-gray-200 duration-1000 ease-out animate-in fade-in zoom-in-50 fill-mode-both dark:border-primary/10'
+        //     }
+        //     width={3558}
+        //     height={2222}
+        //     src={`/images/dashboard.webp`}
+        //     alt={`App Image`}
+        //   />
+        // }
       />
 
       <div className={'container mx-auto'}>
@@ -65,12 +64,11 @@ function Home() {
             heading={
               <>
                 <b className="font-semibold dark:text-white">
-                  The ultimate SaaS Starter Kit
+                  Everything you need
                 </b>
                 .{' '}
                 <GradientSecondaryText>
-                  Unleash your creativity and build your SaaS faster than ever
-                  with Makerkit.
+                  Unleash your creativity and build your social media presence.
                 </GradientSecondaryText>
               </>
             }
@@ -86,63 +84,31 @@ function Home() {
                 className={
                   'relative col-span-2 overflow-hidden bg-violet-500 text-white lg:h-96'
                 }
-                label={'Beautiful Dashboard'}
-                description={`Makerkit provides a beautiful dashboard to manage your SaaS business.`}
-              >
-                <Image
-                  className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border border-border lg:top-36 lg:flex lg:h-auto lg:w-10/12"
-                  src={'/images/dashboard-header.webp'}
-                  width={'2061'}
-                  height={'800'}
-                  alt={'Dashboard Header'}
-                />
-              </FeatureCard>
+                label={'Connect your newsletter'}
+                description={`Link your newsletter account and we'll analyze your content.`}
+              ></FeatureCard>
 
               <FeatureCard
                 className={
                   'relative col-span-2 w-full overflow-hidden lg:col-span-1'
                 }
-                label={'Authentication'}
-                description={`Makerkit provides a variety of providers to allow your users to sign in.`}
-              >
-                <Image
-                  className="absolute left-16 top-32 hidden h-auto w-8/12 rounded-l-2xl lg:flex"
-                  src={'/images/sign-in.webp'}
-                  width={'1760'}
-                  height={'1680'}
-                  alt={'Sign In'}
-                />
-              </FeatureCard>
+                label={'Choose content types'}
+                description={`Select the social media platforms and post formats you want to create.`}
+              ></FeatureCard>
 
               <FeatureCard
                 className={
                   'relative col-span-2 overflow-hidden lg:col-span-1 lg:h-96'
                 }
-                label={'Multi Tenancy'}
-                description={`Multi tenant memberships for your SaaS business.`}
-              >
-                <Image
-                  className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border lg:top-28 lg:flex lg:h-auto lg:w-8/12"
-                  src={'/images/multi-tenancy.webp'}
-                  width={'2061'}
-                  height={'800'}
-                  alt={'Multi Tenancy'}
-                />
-              </FeatureCard>
+                label={'Review and post'}
+                description={`Preview your content, make any adjustments, and schedule or publish directly.`}
+              ></FeatureCard>
 
               <FeatureCard
                 className={'relative col-span-2 overflow-hidden lg:h-96'}
-                label={'Billing'}
-                description={`Makerkit supports multiple payment gateways to charge your customers.`}
-              >
-                <Image
-                  className="absolute right-0 top-0 hidden h-full w-full rounded-tl-2xl border border-border lg:top-36 lg:flex lg:h-auto lg:w-11/12"
-                  src={'/images/billing.webp'}
-                  width={'2061'}
-                  height={'800'}
-                  alt={'Billing'}
-                />
-              </FeatureCard>
+                label="I used to spend 4 hours researching, writing, then editing my newsletter. Then, I'd spend just as much time going back through and picking out pieces that I wanted to then rewrite to fit each social platform. Now, I do all of this in minutes, and it's better than if I'd tried to do it myself."
+                description="Trey, Creator of The Startup Breakdown"
+              ></FeatureCard>
             </FeatureGrid>
           </FeatureShowcase>
         </div>

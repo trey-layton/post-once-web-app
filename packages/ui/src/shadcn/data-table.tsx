@@ -20,11 +20,13 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  noDataMessage?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  noDataMessage,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -72,7 +74,11 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                <Trans i18nKey={'common:noData'} />
+                {noDataMessage ? (
+                  noDataMessage
+                ) : (
+                  <Trans i18nKey={'common:noData'} />
+                )}
               </TableCell>
             </TableRow>
           )}

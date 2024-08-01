@@ -21,12 +21,6 @@ const getRoutes = (account: string) => [
     end: true,
   },
   {
-    label: 'Integrations',
-    path: `/home/${account}/integrations`,
-    Icon: <Link className={iconClasses} />,
-    end: true,
-  },
-  {
     label: 'common:settingsTabLabel',
     collapsible: false,
     children: [
