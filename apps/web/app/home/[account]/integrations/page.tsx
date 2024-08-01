@@ -27,7 +27,7 @@ import {
 import { getSupabaseServerComponentClient } from '@kit/supabase/server-component-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
-import { Button, buttonVariants } from '@kit/ui/button';
+import { Button } from '@kit/ui/button';
 import {
   Card,
   CardContent,
@@ -47,11 +47,8 @@ import {
   SelectValue,
 } from '@kit/ui/select';
 import { Separator } from '@kit/ui/separator';
-import { cn } from '@kit/ui/utils';
 
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
-
-import IntegrationsDataTable from '../_components/integrations-data-table';
 
 //!DON'T HARDCODE
 const codeChallenge = 'sU8s5R59RD6TmljksbSQpAhuXeYQ7d7wGc1SFJnhV3c';

@@ -9,7 +9,9 @@ import { cn } from '@kit/ui/utils';
 
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
+import { createProfilesService } from '~/lib/profiles/profiles.service';
 
+import BeehiivApiKeyDialog from './_components/beehiiv-api-key-dialog';
 import ContentHubForm from './_components/content-hub-form';
 import IntegrationsDataTable from './_components/integrations-data-table';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
@@ -39,11 +41,13 @@ export default async function TeamAccountHomePage({
   const supabase = getSupabaseServerComponentClient();
   const api = createTeamAccountsApi(supabase);
   const integrationsService = createIntegrationsService(supabase);
+  const profilesService = createProfilesService(supabase);
 
-  const team = await api.getTeamAccount(params.account);
-  const { data } = await integrationsService.getIntegrations({
-    accountSlug: params.account,
-  });
+  const [team, { data: integrations }, { data: profile }] = await Promise.all([
+    api.getTeamAccount(params.account),
+    integrationsService.getIntegrations({ accountSlug: params.account }),
+    profilesService.getProfile({ accountSlug: params.account }),
+  ]);
 
   const providers = [
     {
@@ -62,7 +66,7 @@ export default async function TeamAccountHomePage({
       name: 'threads',
       label: 'Threads',
       authUrl: `https://threads.net/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_THREADS_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://post-once-web-app.vercel.app/api/integrations/threads')}&scope=threads_basic,threads_content_publish&response_type=code&state=${encodeURIComponent(JSON.stringify({ account: team.id, slug: params.account }))}`,
-      icon: <ThreadsLogoIcon width={20} height={20} />,
+      icon: <ThreadsLogoIcon className="h-5 w-5" />,
     },
   ];
   return (
@@ -73,6 +77,10 @@ export default async function TeamAccountHomePage({
         description="Manage your accounts and content here."
       ></TeamAccountLayoutPageHeader>
       <PageBody>
+        <BeehiivApiKeyDialog
+          data={profile?.beehiiv_api_key}
+          accountId={team.id}
+        />
         <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-8">
           <Card className="w-full p-4 md:w-1/2">
             <div className="text-lg font-semibold">Connected Accounts</div>
@@ -96,11 +104,13 @@ export default async function TeamAccountHomePage({
                         'w-fit text-sm',
                       )}
                     >
-                      New
+                      Connect
                     </a>
                   </div>
                   <IntegrationsDataTable
-                    data={data.filter((i) => i.provider === provider.name)}
+                    data={integrations.filter(
+                      (i) => i.provider === provider.name,
+                    )}
                   />
                 </div>
               ))}
@@ -111,7 +121,7 @@ export default async function TeamAccountHomePage({
             <div className="text-sm text-muted-foreground">
               Easily access the main features of the tool.
             </div>
-            <ContentHubForm />
+            <ContentHubForm integrations={integrations} />
           </Card>
         </div>
       </PageBody>

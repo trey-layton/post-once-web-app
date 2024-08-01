@@ -20,9 +20,7 @@ export async function GET(request: Request) {
   const slug = searchParams.get('slug');
 
   if (!code || !account || !slug) {
-    return NextResponse.redirect(
-      new URL(`/home/${slug}/integrations`, request.url),
-    );
+    return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
   }
 
   const basicAuthToken = Buffer.from(
@@ -86,12 +84,8 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.redirect(
-      new URL(`/home/${slug}/integrations`, request.url),
-    );
+    return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
   }
 
-  return NextResponse.redirect(
-    new URL(`/home/${slug}/integrations`, request.url),
-  );
+  return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
 }
