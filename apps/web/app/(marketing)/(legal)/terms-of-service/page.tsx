@@ -23,7 +23,7 @@ async function TermsOfServicePage() {
       />
 
       <div className={'container mx-auto py-8'}>
-        <div>Your terms of service content here</div>
+        <div>Terms of Service Coming Soon</div>
       </div>
     </div>
   );

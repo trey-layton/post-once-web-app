@@ -41,6 +41,8 @@ import { Sheet, SheetClose, SheetContent, SheetFooter } from '@kit/ui/sheet';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
 
+//!reset account when contentType changes
+
 const contentHubFormSchema = z.object({
   beehiivArticleUrl: z.string().url(),
   contentType: z.enum([

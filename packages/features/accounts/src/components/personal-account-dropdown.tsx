@@ -6,13 +6,7 @@ import Link from 'next/link';
 
 import type { User } from '@supabase/supabase-js';
 
-import {
-  EllipsisVertical,
-  Home,
-  LogOut,
-  MessageCircleQuestion,
-  Shield,
-} from 'lucide-react';
+import { EllipsisVertical, Home, LogOut, Shield } from 'lucide-react';
 
 import {
   DropdownMenu,
@@ -157,7 +151,7 @@ export function PersonalAccountDropdown({
             </span>
           </Link>
         </DropdownMenuItem>
-
+        {/* 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
@@ -168,7 +162,7 @@ export function PersonalAccountDropdown({
               <Trans i18nKey={'common:documentation'} />
             </span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         <If condition={isSuperAdmin}>
           <DropdownMenuSeparator />
