@@ -6,13 +6,7 @@ import Link from 'next/link';
 
 import type { User } from '@supabase/supabase-js';
 
-import {
-  EllipsisVertical,
-  Home,
-  LogOut,
-  MessageCircleQuestion,
-  Shield,
-} from 'lucide-react';
+import { EllipsisVertical, Home, LogOut, Shield } from 'lucide-react';
 
 import {
   DropdownMenu,
