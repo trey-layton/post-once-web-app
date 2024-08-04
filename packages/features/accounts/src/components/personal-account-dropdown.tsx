@@ -157,7 +157,7 @@ export function PersonalAccountDropdown({
             </span>
           </Link>
         </DropdownMenuItem>
-
+        {/* 
         <DropdownMenuSeparator />
 
         <DropdownMenuItem asChild>
@@ -168,7 +168,7 @@ export function PersonalAccountDropdown({
               <Trans i18nKey={'common:documentation'} />
             </span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
 
         <If condition={isSuperAdmin}>
           <DropdownMenuSeparator />

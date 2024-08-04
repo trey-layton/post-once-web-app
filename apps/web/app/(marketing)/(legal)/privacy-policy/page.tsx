@@ -21,7 +21,7 @@ async function PrivacyPolicyPage() {
       />
 
       <div className={'container mx-auto py-8'}>
-        <div>Your terms of service content here</div>
+        <div>Privacy Policy Coming Soon</div>
       </div>
     </div>
   );

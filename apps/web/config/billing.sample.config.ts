@@ -52,7 +52,7 @@ export default createBillingSchema({
           ],
         },
       ],
-      features: ['Feature 1', 'Feature 2', 'Feature 3'],
+      features: ['Coming Soon'],
     },
     {
       id: 'pro',
@@ -91,13 +91,7 @@ export default createBillingSchema({
           ],
         },
       ],
-      features: [
-        'Feature 1',
-        'Feature 2',
-        'Feature 3',
-        'Feature 4',
-        'Feature 5',
-      ],
+      features: ['Coming Soon'],
     },
     {
       id: 'enterprise',
@@ -134,15 +128,7 @@ export default createBillingSchema({
           ],
         },
       ],
-      features: [
-        'Feature 1',
-        'Feature 2',
-        'Feature 3',
-        'Feature 4',
-        'Feature 5',
-        'Feature 6',
-        'Feature 7',
-      ],
+      features: ['Coming Soon'],
     },
   ],
 });

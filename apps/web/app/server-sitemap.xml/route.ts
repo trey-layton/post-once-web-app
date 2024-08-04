@@ -22,9 +22,9 @@ export async function GET() {
 function getPaths() {
   const paths = [
     '/',
-    '/faq',
+    // '/faq',
     '/blog',
-    '/docs',
+    // '/docs',
     '/pricing',
     '/contact',
     '/cookie-policy',
