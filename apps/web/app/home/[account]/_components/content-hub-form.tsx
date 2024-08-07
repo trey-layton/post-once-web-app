@@ -33,6 +33,8 @@ import PreviewDialog from './preview-dialog';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
 
+//disable contentTypes if matching integrations are not available
+
 const contentHubFormSchema = z.object({
   beehiivArticleUrl: z.string().url(),
   contentType: z.enum([

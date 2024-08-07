@@ -18,6 +18,7 @@ export const addBeehiivApiKey = enhanceAction(
     schema: z.object({
       accountId: z.string(),
       apiKey: z.string(),
+      publicationId: z.string(),
     }),
   },
 );

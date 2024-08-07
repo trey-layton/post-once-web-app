@@ -139,8 +139,13 @@ export function TwitterPreviewPost({
           </div>
         </div>
         <p
-          className="animate-typing text-sm"
-          dangerouslySetInnerHTML={{ __html: message }}
+          className="animate-typing space-y-2 text-sm"
+          dangerouslySetInnerHTML={{
+            __html: message.replace(
+              /<br\s*\/?>/gi,
+              '<span class="block mt-2"></span>',
+            ),
+          }}
         ></p>
         <div className="mt-2 flex items-center justify-between gap-4">
           <MessageCircleIcon className="h-4 w-4 text-muted-foreground" />

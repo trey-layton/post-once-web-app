@@ -25,10 +25,15 @@ class ProfilesService {
     return { data };
   }
 
-  async addBeehiivApiKey(params: { accountId: string; apiKey: string }) {
+  async addBeehiivApiKey(params: {
+    accountId: string;
+    apiKey: string;
+    publicationId: string;
+  }) {
     const { error } = await this.client.from('account_profiles').upsert({
       account_id: params.accountId,
       beehiiv_api_key: params.apiKey,
+      publication_id: params.publicationId,
     });
 
     if (error) {

@@ -23,6 +23,7 @@ import { addBeehiivApiKey } from '../_lib/server/server-actions';
 
 const apiKeyFormSchema = z.object({
   beehiivApiKey: z.string().min(1, 'Please enter your beehiiv API key'),
+  publicationId: z.string().min(1, 'Please enter your publication ID'),
 });
 
 export default function BeehiivApiKeyDialog({
@@ -45,6 +46,7 @@ export default function BeehiivApiKeyDialog({
     resolver: zodResolver(apiKeyFormSchema),
     defaultValues: {
       beehiivApiKey: '',
+      publicationId: '',
     },
   });
 
@@ -54,6 +56,7 @@ export default function BeehiivApiKeyDialog({
       addBeehiivApiKey({
         accountId,
         apiKey: values.beehiivApiKey,
+        publicationId: values.publicationId,
       }),
       {
         loading: 'Adding API key...',
@@ -95,6 +98,22 @@ export default function BeehiivApiKeyDialog({
                     <FormLabel>beehiiv API Key</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter your API key" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="publicationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Publication ID</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your publication ID"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
