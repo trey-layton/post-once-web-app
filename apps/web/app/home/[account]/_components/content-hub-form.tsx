@@ -4,18 +4,11 @@ import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinkedInLogoIcon } from '@radix-ui/react-icons';
-import {
-  Heart,
-  MessageCircleIcon,
-  NotebookPen,
-  Repeat,
-  Share,
-} from 'lucide-react';
+import { LoaderCircle, NotebookPen } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Tables } from '@kit/supabase/database';
-import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { Button } from '@kit/ui/button';
 import {
   Form,
@@ -35,13 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kit/ui/select';
-import { Separator } from '@kit/ui/separator';
-import { Sheet, SheetClose, SheetContent, SheetFooter } from '@kit/ui/sheet';
 
+import PreviewDialog from './preview-dialog';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
-
-//!reset account when contentType changes
 
 const contentHubFormSchema = z.object({
   beehiivArticleUrl: z.string().url(),
@@ -55,20 +45,20 @@ const contentHubFormSchema = z.object({
   account: z.string(),
 });
 
+const contentTypes = [
+  { name: 'pre_nl_cta', label: 'Pre-Newsletter CTA', provider: 'twitter' },
+  { name: 'post_nl_cta', label: 'Post-Newsletter CTA', provider: 'twitter' },
+  { name: 'thread', label: 'Thread', provider: 'twitter' },
+  { name: 'long_form', label: 'Long-form post', provider: 'twitter' },
+  { name: 'long_form_li', label: 'Long-form post', provider: 'linkedin' },
+];
+
 export default function ContentHubForm({
   integrations,
 }: {
   integrations: Tables<'integrations'>[];
 }) {
-  const contentTypes = [
-    { name: 'pre_nl_cta', label: 'Pre-Newsletter CTA', provider: 'twitter' },
-    { name: 'post_nl_cta', label: 'Post-Newsletter CTA', provider: 'twitter' },
-    { name: 'thread', label: 'Thread', provider: 'twitter' },
-    { name: 'long_form', label: 'Long-form post', provider: 'twitter' },
-    { name: 'long_form_li', label: 'Long-form post', provider: 'linkedin' },
-  ];
-
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof contentHubFormSchema>>({
     resolver: zodResolver(contentHubFormSchema),
@@ -85,8 +75,7 @@ export default function ContentHubForm({
   );
 
   function onSubmit(values: z.infer<typeof contentHubFormSchema>) {
-    console.log(values);
-    setIsSheetOpen(true);
+    setIsSubmitted(true);
   }
 
   return (
@@ -188,107 +177,32 @@ export default function ContentHubForm({
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full gap-2" size="lg">
-            <span>Generate</span>
-            <NotebookPen className="h-4 w-4" />
+          <Button
+            type="submit"
+            className="w-full gap-2"
+            size="lg"
+            disabled={isSubmitted}
+          >
+            {isSubmitted ? (
+              <>
+                <span>Generating</span>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              <>
+                <span>Generate</span>
+                <NotebookPen className="h-4 w-4" />
+              </>
+            )}
           </Button>
         </form>
       </Form>
-      <PreviewSheet
-        isOpen={isSheetOpen}
-        onClose={() => setIsSheetOpen(false)}
-        formData={form.getValues()}
+      <PreviewDialog
+        isSubmitted={isSubmitted}
+        setIsSubmitted={setIsSubmitted}
+        integrations={integrations}
+        formValues={form.getValues()}
       />
     </>
-  );
-}
-
-function PreviewSheet({
-  isOpen,
-  onClose,
-  formData,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  formData: z.infer<typeof contentHubFormSchema>;
-}) {
-  //fetch content hereee
-
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent>
-        <div className="space-y-4">
-          {[0, 1].map((_, index) => (
-            <>
-              <div key={index} className="flex items-start gap-4">
-                <Avatar className="shrink-0 border-2 border-primary">
-                  <AvatarImage src="/placeholder-user.jpg" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="font-bold">Shadcn</div>
-                    <div className="text-sm text-muted-foreground">@shadcn</div>
-                    <div className="text-sm text-muted-foreground">· 2h</div>
-                  </div>
-                  <p className="animate-typing">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                    euismod, nisl nec ultricies lacinia, nisl nisl aliquam nisl,
-                    eget aliquam nisl nisl sit amet nisl. Sed euismod, nisl nec
-                    ultricies lacinia, nisl nisl aliquam nisl.
-                  </p>
-                  <div className="mt-2 flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <MessageCircleIcon className="h-5 w-5" />
-                      <span className="sr-only">Reply</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <Repeat className="h-5 w-5" />
-                      <span className="sr-only">Retweet</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <Heart className="h-5 w-5" />
-                      <span className="sr-only">Like</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <Share className="h-5 w-5" />
-                      <span className="sr-only">Share</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              {index !== 1 && <Separator />}
-            </>
-          ))}
-        </div>
-        <SheetFooter className="mt-4">
-          <Button className="w-full">Post</Button>
-          <Button className="w-full" variant="secondary">
-            Regenerate
-          </Button>
-          <SheetClose asChild>
-            <Button type="submit" variant="secondary" className="w-full">
-              Cancel
-            </Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
   );
 }
