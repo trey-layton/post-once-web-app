@@ -27,7 +27,7 @@ import {
 } from '@kit/ui/dialog';
 import { Separator } from '@kit/ui/separator';
 
-import { generateContent } from '../_lib/server/server-actions';
+import { generateContent, postContent } from '../_lib/server/server-actions';
 
 const contentHubFormSchema = z.object({
   beehiivArticleId: z.string(),
@@ -57,6 +57,7 @@ export default function PreviewDialog({
 }) {
   const workspace = useTeamAccountWorkspace();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
 
   const integration = integrations.find(
@@ -89,6 +90,36 @@ export default function PreviewDialog({
     }
   }, [isSubmitted]);
 
+  function handlePost() {
+    setIsPosting(true);
+    toast.promise(
+      postContent({
+        integrationId: formValues.account,
+        content: messages,
+      }),
+      {
+        loading: 'Posting content...',
+        success: (res) => {
+          setIsPosting(false);
+          setIsDialogOpen(false);
+          return (
+            <p>
+              <span>Your content has been posted! </span>
+              <a href={res?.link} target="_blank" rel="noopener noreferrer">
+                <span className="underline">Click here</span> to check it out!
+              </a>
+            </p>
+          );
+        },
+        error: () => {
+          setIsPosting(false);
+          return 'Failed to post content. Please try again.';
+        },
+        duration: 8000,
+      },
+    );
+  }
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="w-[450px]">
@@ -102,14 +133,24 @@ export default function PreviewDialog({
           </div>
         ))}
         <DialogFooter>
-          <Button className="w-full" disabled>
+          <Button
+            className="w-full"
+            type="button"
+            onClick={handlePost}
+            disabled={isPosting}
+          >
             Post
           </Button>
-          <Button className="w-full" variant="secondary" disabled>
+          <Button className="w-full" variant="secondary" type="button" disabled>
             Regenerate
           </Button>
           <DialogClose asChild>
-            <Button type="submit" variant="secondary" className="w-full">
+            <Button
+              type="submit"
+              variant="secondary"
+              className="w-full"
+              disabled={isPosting}
+            >
               Cancel
             </Button>
           </DialogClose>

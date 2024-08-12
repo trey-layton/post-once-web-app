@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { enhanceAction } from '@kit/next/actions';
 import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
+import { createTwitterService } from '~/lib/integrations/twitter.service';
 import { createProfilesService } from '~/lib/profiles/profiles.service';
 
 export const addBeehiivApiKey = enhanceAction(
@@ -25,10 +26,9 @@ export const addBeehiivApiKey = enhanceAction(
 );
 
 export const generateContent = enhanceAction(
-  async (data) => {
+  async ({ beehiivArticleId, contentType, accountId }) => {
     const client = getSupabaseServerActionClient();
 
-    const { beehiivArticleId, contentType, accountId } = data;
     const {
       data: { session },
     } = await client.auth.getSession();
@@ -107,6 +107,26 @@ export const generateContent = enhanceAction(
         'long_form_li',
       ]),
       account: z.string(),
+    }),
+  },
+);
+
+export const postContent = enhanceAction(
+  async ({ integrationId, content }) => {
+    const client = getSupabaseServerActionClient();
+    const twitter = createTwitterService(client);
+
+    if (content.length === 1) {
+      return await twitter.singlePost({
+        integrationId,
+        content: content[0] as string,
+      });
+    }
+  },
+  {
+    schema: z.object({
+      integrationId: z.string(),
+      content: z.string().array(),
     }),
   },
 );
