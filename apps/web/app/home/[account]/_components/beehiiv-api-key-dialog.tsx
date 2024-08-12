@@ -24,6 +24,7 @@ import { addBeehiivApiKey } from '../_lib/server/server-actions';
 const apiKeyFormSchema = z.object({
   beehiivApiKey: z.string().min(1, 'Please enter your beehiiv API key'),
   publicationId: z.string().min(1, 'Please enter your publication ID'),
+  subscribeUrl: z.string().min(1, 'Please enter your subscribe URL'),
 });
 
 export default function BeehiivApiKeyDialog({
@@ -47,6 +48,7 @@ export default function BeehiivApiKeyDialog({
     defaultValues: {
       beehiivApiKey: '',
       publicationId: '',
+      subscribeUrl: '',
     },
   });
 
@@ -57,6 +59,7 @@ export default function BeehiivApiKeyDialog({
         accountId,
         apiKey: values.beehiivApiKey,
         publicationId: values.publicationId,
+        subscribeUrl: values.subscribeUrl,
       }),
       {
         loading: 'Adding API key...',
@@ -112,6 +115,22 @@ export default function BeehiivApiKeyDialog({
                     <FormControl>
                       <Input
                         placeholder="Enter your publication ID"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subscribeUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subscribe URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your subscribe URL"
                         {...field}
                       />
                     </FormControl>

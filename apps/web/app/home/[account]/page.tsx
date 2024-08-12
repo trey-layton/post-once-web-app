@@ -47,7 +47,7 @@ export default async function TeamAccountHomePage({
   const [team, { data: integrations }, { data: profile }] = await Promise.all([
     api.getTeamAccount(params.account),
     integrationsService.getIntegrations({ accountSlug: params.account }),
-    profilesService.getProfile({ accountSlug: params.account }),
+    profilesService.getUserProfile(),
   ]);
 
   const providers = [

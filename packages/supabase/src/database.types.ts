@@ -768,6 +768,41 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          beehiiv_api_key: string | null
+          created_at: string | null
+          id: string
+          publication_id: string | null
+          subscribe_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          beehiiv_api_key?: string | null
+          created_at?: string | null
+          id: string
+          publication_id?: string | null
+          subscribe_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          beehiiv_api_key?: string | null
+          created_at?: string | null
+          id?: string
+          publication_id?: string | null
+          subscribe_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       user_account_workspace: {
@@ -1354,6 +1389,10 @@ export type Database = {
           metadata: Json
           updated_at: string
         }[]
+      }
+      operation: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       search: {
         Args: {

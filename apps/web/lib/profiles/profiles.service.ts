@@ -25,6 +25,18 @@ class ProfilesService {
     return { data };
   }
 
+  async getUserProfile() {
+    const query = this.client.from('user_profiles').select('*').maybeSingle();
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return { data };
+  }
+
   async addBeehiivApiKey(params: {
     accountId: string;
     apiKey: string;
@@ -35,6 +47,35 @@ class ProfilesService {
       beehiiv_api_key: params.apiKey,
       publication_id: params.publicationId,
     });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async addUserBeehiivApiKey(params: {
+    accountId: string;
+    apiKey: string;
+    publicationId: string;
+    subscribeUrl: string;
+  }) {
+    const {
+      data: { user },
+    } = await this.client.auth.getUser();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const { error } = await this.client
+      .from('user_profiles')
+      .upsert({
+        id: user.id,
+        beehiiv_api_key: params.apiKey,
+        publication_id: params.publicationId,
+        subscribe_url: params.subscribeUrl,
+      })
+      .eq('id', user.id);
 
     if (error) {
       throw error;

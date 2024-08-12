@@ -12,13 +12,14 @@ export const addBeehiivApiKey = enhanceAction(
     const client = getSupabaseServerActionClient();
     const service = createProfilesService(client);
 
-    await service.addBeehiivApiKey(data);
+    await service.addUserBeehiivApiKey(data);
   },
   {
     schema: z.object({
       accountId: z.string(),
       apiKey: z.string(),
       publicationId: z.string(),
+      subscribeUrl: z.string(),
     }),
   },
 );
