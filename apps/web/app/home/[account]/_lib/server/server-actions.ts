@@ -12,7 +12,7 @@ export const addBeehiivApiKey = enhanceAction(
     const client = getSupabaseServerActionClient();
     const service = createProfilesService(client);
 
-    await service.addUserBeehiivApiKey(data);
+    await service.addBeehiivApiKey(data);
   },
   {
     schema: z.object({
