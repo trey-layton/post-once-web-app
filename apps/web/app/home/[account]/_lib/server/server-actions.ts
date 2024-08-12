@@ -28,7 +28,7 @@ export const generateContent = enhanceAction(
   async (data) => {
     const client = getSupabaseServerActionClient();
 
-    const { beehiivArticleUrl, contentType, accountId } = data;
+    const { beehiivArticleId, contentType, accountId } = data;
     const {
       data: { session },
     } = await client.auth.getSession();
@@ -42,7 +42,7 @@ export const generateContent = enhanceAction(
         },
         body: JSON.stringify({
           account_id: accountId,
-          edition_url: beehiivArticleUrl,
+          post_id: beehiivArticleId,
           generate_precta_tweet: contentType === 'pre_nl_cta',
           generate_postcta_tweet: contentType === 'post_nl_cta',
           generate_thread_tweet: contentType === 'thread',
@@ -98,7 +98,7 @@ export const generateContent = enhanceAction(
   {
     schema: z.object({
       accountId: z.string(),
-      beehiivArticleUrl: z.string().url(),
+      beehiivArticleId: z.string(),
       contentType: z.enum([
         'pre_nl_cta',
         'post_nl_cta',

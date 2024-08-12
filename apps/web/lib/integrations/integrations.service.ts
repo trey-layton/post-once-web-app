@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { Database } from '~/lib/database.types';
+import { Database, Tables } from '~/lib/database.types';
 
 export function createIntegrationsService(client: SupabaseClient<Database>) {
   return new IntegrationsService(client);
@@ -40,7 +40,10 @@ class IntegrationsService {
   async getIntegrations(params: { accountSlug: string }) {
     const { data, error } = await this.client
       .from('integrations')
-      .select('*, account_id !inner (slug)', {
+      .select<
+        string,
+        Pick<Tables<'integrations'>, 'id' | 'avatar' | 'provider' | 'username'>
+      >('id, avatar, provider, username, account_id !inner (slug)', {
         count: 'exact',
       })
       .eq('account_id.slug', params.accountSlug);

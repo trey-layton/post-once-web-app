@@ -30,7 +30,7 @@ import { Separator } from '@kit/ui/separator';
 import { generateContent } from '../_lib/server/server-actions';
 
 const contentHubFormSchema = z.object({
-  beehiivArticleUrl: z.string().url(),
+  beehiivArticleId: z.string(),
   contentType: z.enum([
     'pre_nl_cta',
     'post_nl_cta',
@@ -49,7 +49,10 @@ export default function PreviewDialog({
 }: {
   isSubmitted: boolean;
   setIsSubmitted: (isSubmitted: boolean) => void;
-  integrations: Tables<'integrations'>[];
+  integrations: Pick<
+    Tables<'integrations'>,
+    'id' | 'avatar' | 'provider' | 'username'
+  >[];
   formValues: z.infer<typeof contentHubFormSchema>;
 }) {
   const workspace = useTeamAccountWorkspace();
@@ -120,7 +123,10 @@ export function TwitterPreviewPost({
   integration,
   message,
 }: {
-  integration?: Tables<'integrations'>;
+  integration?: Pick<
+    Tables<'integrations'>,
+    'id' | 'avatar' | 'provider' | 'username'
+  >;
   message: string;
 }) {
   return (

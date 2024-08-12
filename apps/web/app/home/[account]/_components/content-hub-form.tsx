@@ -18,7 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@kit/ui/form';
-import { Input } from '@kit/ui/input';
 import {
   Select,
   SelectContent,
@@ -36,7 +35,7 @@ import XLogoIcon from './x-logo-icon';
 //disable contentTypes if matching integrations are not available
 
 const contentHubFormSchema = z.object({
-  beehiivArticleUrl: z.string().url(),
+  beehiivArticleId: z.string(),
   contentType: z.enum([
     'pre_nl_cta',
     'post_nl_cta',
@@ -57,15 +56,20 @@ const contentTypes = [
 
 export default function ContentHubForm({
   integrations,
+  posts,
 }: {
-  integrations: Tables<'integrations'>[];
+  integrations: Pick<
+    Tables<'integrations'>,
+    'id' | 'avatar' | 'provider' | 'username'
+  >[];
+  posts: { id: string; title: string }[];
 }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof contentHubFormSchema>>({
     resolver: zodResolver(contentHubFormSchema),
     defaultValues: {
-      beehiivArticleUrl: '',
+      beehiivArticleId: '',
     },
   });
 
@@ -86,16 +90,33 @@ export default function ContentHubForm({
         <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
           <FormField
             control={form.control}
-            name="beehiivArticleUrl"
+            name="beehiivArticleId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Beehiiv Article URL</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your Beehiiv article URL"
-                    {...field}
-                  />
-                </FormControl>
+                <FormLabel>Beehiiv Article</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Article" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectGroup>
+                      {posts.length > 0 ? (
+                        posts.map((post, index) => (
+                          <SelectItem key={index} value={post.id}>
+                            {post.title}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectLabel>No articles available</SelectLabel>
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

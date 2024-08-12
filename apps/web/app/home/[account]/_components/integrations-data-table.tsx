@@ -8,7 +8,10 @@ import { DataTable } from '@kit/ui/data-table';
 
 import { Tables } from '~/lib/database.types';
 
-type Integrations = Tables<'integrations'>;
+type Integrations = Pick<
+  Tables<'integrations'>,
+  'id' | 'avatar' | 'provider' | 'username'
+>;
 
 export default function IntegrationsDataTable(props: { data: Integrations[] }) {
   return (

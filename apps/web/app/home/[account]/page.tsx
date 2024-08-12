@@ -44,11 +44,13 @@ export default async function TeamAccountHomePage({
   const integrationsService = createIntegrationsService(supabase);
   const profilesService = createProfilesService(supabase);
 
-  const [team, { data: integrations }, { data: profile }] = await Promise.all([
-    api.getTeamAccount(params.account),
-    integrationsService.getIntegrations({ accountSlug: params.account }),
-    profilesService.getProfile({ accountSlug: params.account }),
-  ]);
+  const [team, { data: integrations }, { data: profile }, { posts }] =
+    await Promise.all([
+      api.getTeamAccount(params.account),
+      integrationsService.getIntegrations({ accountSlug: params.account }),
+      profilesService.getProfile({ accountSlug: params.account }),
+      profilesService.getBeehiivPosts({ accountSlug: params.account }),
+    ]);
 
   const providers = [
     {
@@ -122,7 +124,7 @@ export default async function TeamAccountHomePage({
             <div className="text-sm text-muted-foreground">
               Easily access the main features of the tool.
             </div>
-            <ContentHubForm integrations={integrations} />
+            <ContentHubForm integrations={integrations} posts={posts} />
           </Card>
         </div>
       </PageBody>

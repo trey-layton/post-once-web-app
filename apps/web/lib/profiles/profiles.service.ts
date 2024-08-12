@@ -1,5 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
+import { z } from 'zod';
+
 import { Database } from '~/lib/database.types';
 
 export function createProfilesService(client: SupabaseClient<Database>) {
@@ -10,13 +12,11 @@ class ProfilesService {
   constructor(private readonly client: SupabaseClient<Database>) {}
 
   async getProfile(params: { accountSlug: string }) {
-    const query = this.client
+    const { data, error } = await this.client
       .from('account_profiles')
       .select('*, account_id !inner (slug)')
       .eq('account_id.slug', params.accountSlug)
       .maybeSingle();
-
-    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -40,6 +40,46 @@ class ProfilesService {
 
     if (error) {
       throw error;
+    }
+  }
+
+  async getBeehiivPosts(params: { accountSlug: string }) {
+    const { data, error } = await this.client
+      .from('account_profiles')
+      .select('*, account_id !inner (slug)')
+      .eq('account_id.slug', params.accountSlug)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    } else if (!data) {
+      return { posts: [] };
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.beehiiv.com/v2/publications/${data.publication_id}/posts`,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: `Bearer ${data.beehiiv_api_key}`,
+          },
+        },
+      );
+
+      const posts = z
+        .object({
+          id: z.string(),
+          title: z.string(),
+        })
+        .array()
+        .parse((await response.json()).data);
+
+      return { posts };
+    } catch (error) {
+      console.error(error);
+      return { posts: [] };
     }
   }
 }
