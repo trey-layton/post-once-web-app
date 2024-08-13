@@ -28,30 +28,24 @@ import {
   SelectValue,
 } from '@kit/ui/select';
 
+import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
+
 import PreviewDialog from './preview-dialog';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
 
-//disable contentTypes if matching integrations are not available
+//!disable contentTypes if matching integrations are not available
 
-const contentHubFormSchema = z.object({
-  beehiivArticleId: z.string(),
-  contentType: z.enum([
-    'pre_nl_cta',
-    'post_nl_cta',
-    'thread',
-    'long_form',
-    'long_form_li',
-  ]),
-  account: z.string(),
-});
-
-const contentTypes = [
-  { name: 'pre_nl_cta', label: 'Pre-Newsletter CTA', provider: 'twitter' },
-  { name: 'post_nl_cta', label: 'Post-Newsletter CTA', provider: 'twitter' },
-  { name: 'thread', label: 'Thread', provider: 'twitter' },
-  { name: 'long_form', label: 'Long-form post', provider: 'twitter' },
-  { name: 'long_form_li', label: 'Long-form post', provider: 'linkedin' },
+const contentTypes: {
+  name: z.infer<typeof contentHubFormSchema>['contentType'];
+  label: string;
+  provider: Tables<'integrations'>['provider'];
+}[] = [
+  { name: 'precta_tweet', label: 'Pre-Newsletter CTA', provider: 'twitter' },
+  { name: 'postcta_tweet', label: 'Post-Newsletter CTA', provider: 'twitter' },
+  { name: 'thread_tweet', label: 'Thread', provider: 'twitter' },
+  { name: 'long_form_tweet', label: 'Long-form post', provider: 'twitter' },
+  { name: 'linkedin', label: 'Long-form post', provider: 'linkedin' },
 ];
 
 export default function ContentHubForm({
@@ -68,9 +62,6 @@ export default function ContentHubForm({
 
   const form = useForm<z.infer<typeof contentHubFormSchema>>({
     resolver: zodResolver(contentHubFormSchema),
-    defaultValues: {
-      beehiivArticleId: '',
-    },
   });
 
   const filteredIntegrations = integrations.filter(

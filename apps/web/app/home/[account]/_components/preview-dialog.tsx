@@ -16,7 +16,7 @@ import { z } from 'zod';
 import { Tables } from '@kit/supabase/database';
 import { useTeamAccountWorkspace } from '@kit/team-accounts/hooks/use-team-account-workspace';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
-import { Button } from '@kit/ui/button';
+import { Button, buttonVariants } from '@kit/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -25,21 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@kit/ui/dialog';
+import { ScrollArea } from '@kit/ui/scroll-area';
 import { Separator } from '@kit/ui/separator';
+
+import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
+import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
 
 import { generateContent, postContent } from '../_lib/server/server-actions';
 
-const contentHubFormSchema = z.object({
-  beehiivArticleId: z.string(),
-  contentType: z.enum([
-    'pre_nl_cta',
-    'post_nl_cta',
-    'thread',
-    'long_form',
-    'long_form_li',
-  ]),
-  account: z.string(),
-});
 
 export default function PreviewDialog({
   isSubmitted,
@@ -58,7 +51,8 @@ export default function PreviewDialog({
   const workspace = useTeamAccountWorkspace();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [messages, setMessages] = useState<string[]>([]);
+  const [content, setContent] =
+    useState<z.infer<typeof generatedContentSchema>>();
 
   const integration = integrations.find(
     (integration) => integration.id === formValues.account,
@@ -70,10 +64,10 @@ export default function PreviewDialog({
     onMutate: () => {
       toast.loading('Generating content...');
     },
-    onSuccess: (response) => {
+    onSuccess: (res) => {
       toast.dismiss();
       toast.success('Content generated successfully.');
-      setMessages(response.content);
+      setContent(res);
       setIsDialogOpen(true);
       setIsSubmitted(false);
     },
@@ -91,56 +85,81 @@ export default function PreviewDialog({
   }, [isSubmitted]);
 
   function handlePost() {
+    if (!content) return;
     setIsPosting(true);
-    toast.promise(
-      postContent({
-        integrationId: formValues.account,
-        content: messages,
-      }),
-      {
-        loading: 'Posting content...',
-        success: (res) => {
-          setIsPosting(false);
-          setIsDialogOpen(false);
-          return (
-            <p>
-              <span>Your content has been posted! </span>
-              <a href={res?.link} target="_blank" rel="noopener noreferrer">
-                <span className="underline">Click here</span> to check it out!
-              </a>
-            </p>
-          );
+    if (content.provider === 'twitter') {
+      toast.promise(
+        postContent({
+          integrationId: formValues.account,
+          content,
+        }),
+        {
+          loading: 'Posting content...',
+          success: (res) => {
+            setIsPosting(false);
+            setIsDialogOpen(false);
+            return (
+              <p>
+                <span>Your content has been posted! </span>
+                <a href={res?.link} target="_blank" rel="noopener noreferrer">
+                  <span className="underline">Click here</span> to check it out!
+                </a>
+              </p>
+            );
+          },
+          error: () => {
+            setIsPosting(false);
+            return 'Failed to post content. Please try again.';
+          },
+          duration: 8000,
         },
-        error: () => {
-          setIsPosting(false);
-          return 'Failed to post content. Please try again.';
-        },
-        duration: 8000,
-      },
-    );
+      );
+    } else if (content.provider === 'linkedin') {
+    }
   }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="w-[450px]">
-        <DialogHeader className="mb-2">
+      <DialogContent className="w-[450px] px-0">
+        <DialogHeader className="mb-2 px-6">
           <DialogTitle>Generated Content Preview</DialogTitle>
         </DialogHeader>
-        {messages.map((message, index) => (
-          <div key={index} className="space-y-4">
-            <TwitterPreviewPost integration={integration} message={message} />
-            {index !== 1 && <Separator />}
+        <ScrollArea className="mx-2 max-h-80 px-4">
+          <div className="flex flex-col gap-y-3">
+            {content?.content.map((post, index) => {
+              return content.provider === 'twitter' ? (
+                <>
+                  <TwitterPreviewPost
+                    key={index}
+                    integration={integration}
+                    message={post.text}
+                  />
+                  <Separator />
+                </>
+              ) : null; //linkedin post here
+            })}
           </div>
-        ))}
-        <DialogFooter>
-          <Button
-            className="w-full"
-            type="button"
-            onClick={handlePost}
-            disabled={isPosting}
-          >
-            Post
-          </Button>
+        </ScrollArea>
+        <DialogFooter className="px-6">
+          {content?.type !== 'long_form_tweet' ? (
+            <Button
+              className="w-full"
+              type="button"
+              onClick={handlePost}
+              disabled={isPosting}
+            >
+              Post
+            </Button>
+          ) : (
+            <a
+              className={buttonVariants({ className: 'w-full' })}
+              href={`https://twitter.com/intent/tweet?text=${content.content.length > 0 && content.content[0]?.text ? encodeURIComponent(content.content[0].text) : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Post
+            </a>
+          )}
           <Button className="w-full" variant="secondary" type="button" disabled>
             Regenerate
           </Button>

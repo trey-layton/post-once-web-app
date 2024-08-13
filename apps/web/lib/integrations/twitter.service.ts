@@ -94,4 +94,69 @@ class TwitterService {
       link: `https://twitter.com/${integration.username}/status/${tweet.id}`,
     };
   }
+
+  async threadPost(params: {
+    content: { text: string; type: string }[];
+    integrationId: string;
+  }) {
+    const integration = await this.refreshAccessToken({
+      integrationId: params.integrationId,
+    });
+
+    let firstTweetId: string | null = null;
+    let previousTweetId: string | null = null;
+
+    for (const tweetContent of params.content) {
+      if (tweetContent.type === 'quote_tweet') {
+        continue;
+      }
+
+      const response = await fetch('https://api.twitter.com/2/tweets', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${integration.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: tweetContent.text,
+          ...(previousTweetId && {
+            reply: { in_reply_to_tweet_id: previousTweetId },
+          }),
+        }),
+      });
+
+      const tweet = z
+        .object({
+          id: z.string(),
+        })
+        .parse((await response.json()).data);
+
+      if (!firstTweetId) {
+        firstTweetId = tweet.id;
+      }
+      previousTweetId = tweet.id;
+    }
+
+    for (const tweetContent of params.content) {
+      if (tweetContent.type === 'quote_tweet') {
+        await fetch('https://api.twitter.com/2/tweets', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${integration.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: tweetContent.text,
+            quote_tweet_id: firstTweetId,
+          }),
+        });
+
+        break;
+      }
+    }
+
+    return {
+      link: `https://twitter.com/${integration.username}/status/${firstTweetId}`,
+    };
+  }
 }

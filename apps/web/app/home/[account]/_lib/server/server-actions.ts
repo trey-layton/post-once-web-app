@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { enhanceAction } from '@kit/next/actions';
 import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
+import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
+import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 import { createProfilesService } from '~/lib/profiles/profiles.service';
 
@@ -43,11 +45,7 @@ export const generateContent = enhanceAction(
         body: JSON.stringify({
           account_id: accountId,
           post_id: beehiivArticleId,
-          generate_precta_tweet: contentType === 'pre_nl_cta',
-          generate_postcta_tweet: contentType === 'post_nl_cta',
-          generate_thread_tweet: contentType === 'thread',
-          generate_long_form_tweet: contentType === 'long_form',
-          generate_linkedin: contentType === 'long_form_li',
+          content_type: contentType,
         }),
       });
 
@@ -55,58 +53,14 @@ export const generateContent = enhanceAction(
         throw new Error(`Error: ${response.statusText}`);
       }
 
-      const result = z
-        .object({
-          status: z.enum(['success', 'error']),
-          message: z.string(),
-          content: z.record(
-            z.union([
-              z.string(),
-              z.array(
-                z.object({
-                  type: z.string(),
-                  text: z.string(),
-                }),
-              ),
-            ]),
-          ),
-        })
-        .parse(await response.json());
-
-      const transformedContent = [];
-      for (const key in result.content) {
-        if (Array.isArray(result.content[key])) {
-          (
-            result.content[key] as {
-              type: string;
-              text: string;
-            }[]
-          ).forEach((item) => transformedContent.push(item.text));
-        } else if (typeof result.content[key] === 'string') {
-          transformedContent.push(result.content[key] as string);
-        }
-      }
-
-      return {
-        ...result,
-        content: transformedContent,
-      };
+      return generatedContentSchema.parse(await response.json());
     } catch (error) {
       throw new Error('Failed to generate content.');
     }
   },
   {
-    schema: z.object({
+    schema: contentHubFormSchema.extend({
       accountId: z.string(),
-      beehiivArticleId: z.string(),
-      contentType: z.enum([
-        'pre_nl_cta',
-        'post_nl_cta',
-        'thread',
-        'long_form',
-        'long_form_li',
-      ]),
-      account: z.string(),
     }),
   },
 );
@@ -116,17 +70,26 @@ export const postContent = enhanceAction(
     const client = getSupabaseServerActionClient();
     const twitter = createTwitterService(client);
 
-    if (content.length === 1) {
+    if (
+      (content.type === 'precta_tweet' || content.type === 'postcta_tweet') &&
+      content.content.length > 0 &&
+      content.content[0]?.text
+    ) {
       return await twitter.singlePost({
         integrationId,
-        content: content[0] as string,
+        content: content.content[0].text,
+      });
+    } else if (content.type === 'thread_tweet') {
+      return await twitter.threadPost({
+        integrationId,
+        content: content.content,
       });
     }
   },
   {
     schema: z.object({
       integrationId: z.string(),
-      content: z.string().array(),
+      content: generatedContentSchema,
     }),
   },
 );
