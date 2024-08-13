@@ -5,10 +5,15 @@ import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   ChartNoAxesColumn,
+  Earth,
   Heart,
   MessageCircleIcon,
+  MessageSquareText,
+  MousePointer2,
   Repeat,
+  Repeat2,
   Share,
+  ThumbsUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -32,7 +37,6 @@ import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema'
 import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
 
 import { generateContent, postContent } from '../_lib/server/server-actions';
-
 
 export default function PreviewDialog({
   isSubmitted,
@@ -87,35 +91,32 @@ export default function PreviewDialog({
   function handlePost() {
     if (!content) return;
     setIsPosting(true);
-    if (content.provider === 'twitter') {
-      toast.promise(
-        postContent({
-          integrationId: formValues.account,
-          content,
-        }),
-        {
-          loading: 'Posting content...',
-          success: (res) => {
-            setIsPosting(false);
-            setIsDialogOpen(false);
-            return (
-              <p>
-                <span>Your content has been posted! </span>
-                <a href={res?.link} target="_blank" rel="noopener noreferrer">
-                  <span className="underline">Click here</span> to check it out!
-                </a>
-              </p>
-            );
-          },
-          error: () => {
-            setIsPosting(false);
-            return 'Failed to post content. Please try again.';
-          },
-          duration: 8000,
+    toast.promise(
+      postContent({
+        integrationId: formValues.account,
+        content,
+      }),
+      {
+        loading: 'Posting content...',
+        success: (res) => {
+          setIsPosting(false);
+          setIsDialogOpen(false);
+          return (
+            <p>
+              <span>Your content has been posted! </span>
+              <a href={res?.link} target="_blank" rel="noopener noreferrer">
+                <span className="underline">Click here</span> to check it out!
+              </a>
+            </p>
+          );
         },
-      );
-    } else if (content.provider === 'linkedin') {
-    }
+        error: () => {
+          setIsPosting(false);
+          return 'Failed to post content. Please try again.';
+        },
+        duration: 8000,
+      },
+    );
   }
 
   return (
@@ -136,7 +137,16 @@ export default function PreviewDialog({
                   />
                   <Separator />
                 </>
-              ) : null; //linkedin post here
+              ) : content.provider === 'linkedin' ? (
+                <>
+                  <LinkedInPreviewPost
+                    key={index}
+                    integration={integration}
+                    message={post.text}
+                  />
+                  <Separator />
+                </>
+              ) : null;
             })}
           </div>
         </ScrollArea>
@@ -179,7 +189,7 @@ export default function PreviewDialog({
   );
 }
 
-export function TwitterPreviewPost({
+function TwitterPreviewPost({
   integration,
   message,
 }: {
@@ -222,5 +232,67 @@ export function TwitterPreviewPost({
         </div>
       </div>
     </div>
+  );
+}
+
+function LinkedInPreviewPost({
+  integration,
+  message,
+}: {
+  integration?: Pick<
+    Tables<'integrations'>,
+    'id' | 'avatar' | 'provider' | 'username'
+  >;
+  message: string;
+}) {
+  return (
+    <>
+      <div className="flex items-start gap-4">
+        <Avatar>
+          <AvatarImage src={integration?.avatar ?? ''} />
+          <AvatarFallback>
+            {integration?.username ? integration.username[0] : '?'}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-bold">{integration?.username}</div>
+            <div className="text-sm text-muted-foreground">· 1st</div>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="text-xs text-muted-foreground">now</div>
+            <div className="text-xs">·</div>
+            <Earth className="h-3 w-3" />
+          </div>
+        </div>
+      </div>
+      <p
+        className="animate-typing space-y-2 text-sm"
+        dangerouslySetInnerHTML={{
+          __html: message.replace(
+            /<br\s*\/?>/gi,
+            '<span class="block mt-2"></span>',
+          ),
+        }}
+      ></p>
+      <div className="mt-2 flex items-center justify-between gap-4 px-6 text-muted-foreground">
+        <div className="flex flex-col items-center gap-0.5">
+          <ThumbsUp className="h-4 w-4" />
+          <span className="text-xs font-medium">Like</span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <MessageSquareText className="h-4 w-4" />
+          <span className="text-xs font-medium">Comment</span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <Repeat2 className="h-4 w-4" />
+          <span className="text-xs font-medium">Repost</span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <MousePointer2 className="h-4 w-4" />
+          <span className="text-xs font-medium">Send</span>
+        </div>
+      </div>
+    </>
   );
 }

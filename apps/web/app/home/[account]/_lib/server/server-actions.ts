@@ -7,6 +7,7 @@ import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-clie
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
+import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 import { createProfilesService } from '~/lib/profiles/profiles.service';
 
@@ -69,8 +70,10 @@ export const postContent = enhanceAction(
   async ({ integrationId, content }) => {
     const client = getSupabaseServerActionClient();
     const twitter = createTwitterService(client);
+    const linkedin = createLinkedInService(client);
 
     if (
+      content.provider === 'twitter' &&
       (content.type === 'precta_tweet' || content.type === 'postcta_tweet') &&
       content.content.length > 0 &&
       content.content[0]?.text
@@ -79,10 +82,23 @@ export const postContent = enhanceAction(
         integrationId,
         content: content.content[0].text,
       });
-    } else if (content.type === 'thread_tweet') {
+    } else if (
+      content.provider === 'twitter' &&
+      content.type === 'thread_tweet'
+    ) {
       return await twitter.threadPost({
         integrationId,
         content: content.content,
+      });
+    } else if (
+      content.provider === 'linkedin' &&
+      content.type === 'linkedin' &&
+      content.content.length > 0 &&
+      content.content[0]?.text
+    ) {
+      return await linkedin.singlePost({
+        integrationId,
+        content: content.content[0].text,
       });
     }
   },

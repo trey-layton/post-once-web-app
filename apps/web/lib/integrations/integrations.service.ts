@@ -19,6 +19,7 @@ class IntegrationsService {
     expiresIn?: number;
     username?: string;
     avatar?: string;
+    providerUserId?: string;
   }) {
     const { data, error } = await this.client.from('integrations').upsert(
       {
@@ -29,6 +30,7 @@ class IntegrationsService {
         expires_in: params.expiresIn,
         username: params.username,
         avatar: params.avatar,
+        provider_user_id: params.providerUserId,
       },
       { onConflict: 'account_id, provider, username' },
     );

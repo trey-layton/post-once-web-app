@@ -26,6 +26,7 @@ create table if not exists public.integrations (
   expires_in int,
   username text,
   avatar text,
+  provider_user_id text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
