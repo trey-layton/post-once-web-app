@@ -309,6 +309,7 @@ export type Database = {
           expires_in: number | null
           id: string
           provider: Database["public"]["Enums"]["integration_provider"]
+          provider_user_id: string | null
           refresh_token: string | null
           updated_at: string
           username: string | null
@@ -321,6 +322,7 @@ export type Database = {
           expires_in?: number | null
           id?: string
           provider: Database["public"]["Enums"]["integration_provider"]
+          provider_user_id?: string | null
           refresh_token?: string | null
           updated_at?: string
           username?: string | null
@@ -333,6 +335,7 @@ export type Database = {
           expires_in?: number | null
           id?: string
           provider?: Database["public"]["Enums"]["integration_provider"]
+          provider_user_id?: string | null
           refresh_token?: string | null
           updated_at?: string
           username?: string | null

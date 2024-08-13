@@ -60,6 +60,7 @@ export async function GET(request: Request) {
       email: z.string(),
       name: z.string(),
       picture: z.string(),
+      sub: z.string(),
     })
     .parse(await userInfoResponse.json());
 
@@ -71,6 +72,7 @@ export async function GET(request: Request) {
       expiresIn: tokenData.expires_in,
       username: userInfo.name,
       avatar: userInfo.picture,
+      providerUserId: userInfo.sub,
     });
   } catch (error) {
     console.error(error);

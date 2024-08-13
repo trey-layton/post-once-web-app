@@ -26,16 +26,21 @@ create table if not exists public.integrations (
   expires_in int,
   username text,
   avatar text,
+  provider_user_id text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- add unique constraint
+alter table integrations
+add constraint unique_account_provider_username unique (account_id, provider, username);
  
 -- revoke permissions on public.integrations
 revoke all on public.integrations from public, service_role;
  
 -- grant required permissions on public.integrations
 grant select, insert, update, delete on public.integrations to authenticated;
-grant select, insert on public.integrations to service_role;
+grant select, insert, update on public.integrations to service_role;
  
 -- Indexes
 create index ix_integrations_account_id on public.integrations(account_id);

@@ -19,16 +19,21 @@ class IntegrationsService {
     expiresIn?: number;
     username?: string;
     avatar?: string;
+    providerUserId?: string;
   }) {
-    const { data, error } = await this.client.from('integrations').insert({
-      account_id: params.accountId,
-      provider: params.provider,
-      access_token: params.accessToken,
-      refresh_token: params.refreshToken,
-      expires_in: params.expiresIn,
-      username: params.username,
-      avatar: params.avatar,
-    });
+    const { data, error } = await this.client.from('integrations').upsert(
+      {
+        account_id: params.accountId,
+        provider: params.provider,
+        access_token: params.accessToken,
+        refresh_token: params.refreshToken,
+        expires_in: params.expiresIn,
+        username: params.username,
+        avatar: params.avatar,
+        provider_user_id: params.providerUserId,
+      },
+      { onConflict: 'account_id, provider, username' },
+    );
 
     if (error) {
       throw error;

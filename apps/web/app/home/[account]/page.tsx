@@ -56,7 +56,7 @@ export default async function TeamAccountHomePage({
     {
       name: 'linkedin',
       label: 'LinkedIn',
-      authUrl: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=openid%20profile%20email`,
+      authUrl: `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_LINKEDIN_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=openid%20profile%20email%20w_member_social`,
       icon: <LinkedInLogoIcon className="h-5 w-5" />,
     },
     {
