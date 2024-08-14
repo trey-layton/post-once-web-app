@@ -39,9 +39,9 @@ export const UpdateTeamAccountBeehiivForm = ({
   const form = useForm({
     resolver: zodResolver(beehiivFormSchema),
     defaultValues: {
-      beehiivApiKey: beehiivProfile?.beehiiv_api_key || '',
-      publicationId: beehiivProfile?.publication_id || '',
-      subscribeUrl: beehiivProfile?.subscribe_url || '',
+      beehiivApiKey: beehiivProfile?.beehiiv_api_key ?? '',
+      publicationId: beehiivProfile?.publication_id ?? '',
+      subscribeUrl: beehiivProfile?.subscribe_url ?? '',
     },
   });
 
