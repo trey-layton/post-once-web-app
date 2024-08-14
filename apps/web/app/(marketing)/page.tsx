@@ -114,7 +114,7 @@ function Home() {
         </div>
       </div>
 
-      <div className={'container mx-auto'}>
+      {/* <div className={'container mx-auto'}>
         <div
           className={
             'flex flex-col items-center justify-center space-y-16 py-16'
@@ -136,7 +136,7 @@ function Home() {
             />
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

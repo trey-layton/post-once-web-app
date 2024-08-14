@@ -11,7 +11,7 @@ export function SiteHeader(props: { user?: User | null }) {
   return (
     <Header
       logo={<AppLogo />}
-      navigation={<SiteNavigation />}
+      //navigation={<SiteNavigation />}
       actions={<SiteHeaderAccountSection user={props.user ?? null} />}
     />
   );
