@@ -7,8 +7,8 @@ import { Trans } from '@kit/ui/trans';
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
+import { createProfilesService } from '~/lib/profiles/profiles.service';
 
-// local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 
 export const generateMetadata = async () => {
@@ -31,8 +31,14 @@ const paths = {
 };
 
 async function TeamAccountSettingsPage(props: Props) {
-  const api = createTeamAccountsApi(getSupabaseServerComponentClient());
-  const data = await api.getTeamAccount(props.params.account);
+  const supabase = getSupabaseServerComponentClient();
+  const api = createTeamAccountsApi(supabase);
+  const profilesService = createProfilesService(supabase);
+
+  const [data, { data: beehiivProfile }] = await Promise.all([
+    api.getTeamAccount(props.params.account),
+    profilesService.getProfile({ accountSlug: props.params.account }),
+  ]);
 
   const account = {
     id: data.id,
@@ -60,6 +66,7 @@ async function TeamAccountSettingsPage(props: Props) {
             account={account}
             paths={paths}
             features={features}
+            beehiivProfile={beehiivProfile}
           />
         </div>
       </PageBody>
