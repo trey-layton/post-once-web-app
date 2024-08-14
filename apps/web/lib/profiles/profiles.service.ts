@@ -58,7 +58,7 @@ class ProfilesService {
 
     try {
       const response = await fetch(
-        `https://api.beehiiv.com/v2/publications/${data.publication_id}/posts`,
+        `https://api.beehiiv.com/v2/publications/${data.publication_id}/posts?order_by=displayed_date&direction=desc`,
         {
           method: 'GET',
           headers: {
