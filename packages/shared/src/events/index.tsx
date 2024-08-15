@@ -12,6 +12,8 @@ export interface BaseAppEventTypes {
   'checkout.started': { planId: string; account?: string };
 
   // Add more base event types here
+  'content.generate': { contentType: string; success: string };
+  'content.post': { contentType: string; success: string; postUrl: string };
 }
 
 export type ConsumerProvidedEventTypes = EmptyPayload;

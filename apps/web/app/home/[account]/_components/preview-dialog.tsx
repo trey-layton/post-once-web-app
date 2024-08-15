@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import { useAppEvents } from '@kit/shared/events';
 import { Tables } from '@kit/supabase/database';
 import { useTeamAccountWorkspace } from '@kit/team-accounts/hooks/use-team-account-workspace';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
@@ -52,9 +53,10 @@ export default function PreviewDialog({
   >[];
   formValues: z.infer<typeof contentHubFormSchema>;
 }) {
+  const { emit } = useAppEvents();
   const workspace = useTeamAccountWorkspace();
+  const [pending, startTransition] = useTransition();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isPosting, setIsPosting] = useState(false);
   const [content, setContent] =
     useState<z.infer<typeof generatedContentSchema>>();
 
@@ -74,11 +76,19 @@ export default function PreviewDialog({
       setContent(res);
       setIsDialogOpen(true);
       setIsSubmitted(false);
+      emit({
+        type: 'content.generate',
+        payload: { contentType: formValues.contentType, success: "true" },
+      });
     },
-    onError: (error) => {
+    onError: () => {
       toast.dismiss();
       toast.error('Failed to generate content. Please try again.');
       setIsSubmitted(false);
+      emit({
+        type: 'content.generate',
+        payload: { contentType: formValues.contentType, success: "false" },
+      });
     },
   });
 
@@ -90,33 +100,48 @@ export default function PreviewDialog({
 
   function handlePost() {
     if (!content) return;
-    setIsPosting(true);
-    toast.promise(
-      postContent({
-        integrationId: formValues.account,
-        content,
-      }),
-      {
-        loading: 'Posting content...',
-        success: (res) => {
-          setIsPosting(false);
-          setIsDialogOpen(false);
-          return (
-            <p>
-              <span>Your content has been posted! </span>
-              <a href={res?.link} target="_blank" rel="noopener noreferrer">
-                <span className="underline">Click here</span> to check it out!
-              </a>
-            </p>
-          );
+    startTransition(() => {
+      toast.promise(
+        postContent({
+          integrationId: formValues.account,
+          content,
+        }),
+        {
+          loading: 'Posting content...',
+          success: (res) => {
+            setIsDialogOpen(false);
+            emit({
+              type: 'content.post',
+              payload: {
+                contentType: formValues.contentType,
+                success: "true",
+                postUrl: res?.link ?? '',
+              },
+            });
+            return (
+              <p>
+                <span>Your content has been posted! </span>
+                <a href={res?.link} target="_blank" rel="noopener noreferrer">
+                  <span className="underline">Click here</span> to check it out!
+                </a>
+              </p>
+            );
+          },
+          error: () => {
+            emit({
+              type: 'content.post',
+              payload: {
+                contentType: formValues.contentType,
+                success: "false",
+                postUrl: '',
+              },
+            });
+            return 'Failed to post content. Please try again.';
+          },
+          duration: 8000,
         },
-        error: () => {
-          setIsPosting(false);
-          return 'Failed to post content. Please try again.';
-        },
-        duration: 8000,
-      },
-    );
+      );
+    });
   }
 
   return (
@@ -156,7 +181,7 @@ export default function PreviewDialog({
               className="w-full"
               type="button"
               onClick={handlePost}
-              disabled={isPosting}
+              disabled={pending}
             >
               Post
             </Button>
@@ -178,7 +203,7 @@ export default function PreviewDialog({
               type="submit"
               variant="secondary"
               className="w-full"
-              disabled={isPosting}
+              disabled={pending}
             >
               Cancel
             </Button>
