@@ -37,7 +37,7 @@ export default function TwitterPreviewPost({
     <div className="relative flex items-start gap-3">
       {!isEdit ? (
         <button
-          className="absolute right-0.5 top-0.5 text-border transition hover:text-muted-foreground"
+          className="absolute right-0.5 top-0.5 text-muted-foreground/70 transition hover:text-muted-foreground"
           onClick={() => setIsEdit(true)}
         >
           <Pencil className="h-4 w-4" />

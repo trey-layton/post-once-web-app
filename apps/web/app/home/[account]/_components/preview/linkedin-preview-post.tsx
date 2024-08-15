@@ -38,7 +38,7 @@ export default function LinkedInPreviewPost({
       <div className="relative flex items-start gap-4 px-1">
         {!isEdit ? (
           <button
-            className="absolute right-1 top-1 text-border transition hover:text-muted-foreground"
+            className="absolute right-1 top-1 text-muted-foreground/70 transition hover:text-muted-foreground"
             onClick={() => setIsEdit(true)}
           >
             <Pencil className="h-4 w-4" />
