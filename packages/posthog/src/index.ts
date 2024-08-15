@@ -2,10 +2,10 @@
  * Create a Posthog analytics service.
  */
 export function createPostHogAnalyticsService() {
-  const projectKey = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_KEY!;
+  //!USE ENV
+  const projectKey = 'phc_9XGZpZROmsbTNXhUcpcBBOpHkzk9m1FfBw2L0HxfQcs';
 
-  const posthogUrl =
-    process.env.NEXT_PUBLIC_POSTHOG_URL ?? 'https://us.i.posthog.com/capture/';
+  const posthogUrl = 'https://us.i.posthog.com/capture/';
 
   return new PostHogAnalyticsService(projectKey, posthogUrl);
 }

@@ -48,7 +48,6 @@ export default function PreviewDialog({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [content, setContent] =
     useState<z.infer<typeof generatedContentSchema>>();
-  console.log('content', content);
 
   const integration = integrations.find(
     (integration) => integration.id === formValues.account,
