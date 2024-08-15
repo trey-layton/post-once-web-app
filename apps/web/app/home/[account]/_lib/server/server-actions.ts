@@ -54,7 +54,19 @@ export const generateContent = enhanceAction(
         throw new Error(`Error: ${response.statusText}`);
       }
 
-      return generatedContentSchema.parse(await response.json());
+      const generatedContent = generatedContentSchema.parse(
+        await response.json(),
+      );
+
+      return {
+        ...generatedContent,
+        content: generatedContent.content.map((item) => ({
+          ...item,
+          text: item.text
+            .replace(/<br><br>/g, '\n\n')
+            .replace(/ *<br> */g, '\n\n'),
+        })),
+      };
     } catch (error) {
       throw new Error('Failed to generate content.');
     }

@@ -63,6 +63,12 @@ const analyticsMapping: AnalyticsMapping = {
   'user.updated': (event) => {
     return analytics.trackEvent(event.type, event.payload);
   },
+  'content.generate': (event) => {
+    return analytics.trackEvent(event.type, event.payload);
+  },
+  'content.post': (event) => {
+    return analytics.trackEvent(event.type, event.payload);
+  },
 };
 
 /**

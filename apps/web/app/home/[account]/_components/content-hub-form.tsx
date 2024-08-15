@@ -30,7 +30,7 @@ import {
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 
-import PreviewDialog from './preview-dialog';
+import PreviewDialog from './preview/preview-dialog';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
 
