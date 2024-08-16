@@ -37,17 +37,17 @@ export function createAnalyticsManager<T extends string, Config extends object>(
         return;
       }
 
-      activeServices.set(provider as T, factory());
+      const service = factory();
+      activeServices.set(provider as T, service);
+
+      void service.initialize();
     });
   };
 
   registerActiveServices(options);
 
   return {
-    addProvider: (
-      provider: T,
-      config: Config,
-    ) => {
+    addProvider: (provider: T, config: Config) => {
       const factory = options.providers[provider];
 
       if (!factory) {
@@ -74,9 +74,9 @@ export function createAnalyticsManager<T extends string, Config extends object>(
       );
     },
 
-    trackPageView: (url: string) => {
+    trackPageView: (path: string) => {
       return Promise.all(
-        getActiveServices().map((service) => service.trackPageView(url)),
+        getActiveServices().map((service) => service.trackPageView(path)),
       );
     },
 

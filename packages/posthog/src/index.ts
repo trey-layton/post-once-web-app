@@ -1,140 +1,218 @@
+import type { PostHog as ClientPostHog } from 'posthog-js';
+import type { PostHog as ServerPostHog } from 'posthog-node';
+
+const isOnServer = typeof document === 'undefined';
+
 /**
  * Create a Posthog analytics service.
  */
 export function createPostHogAnalyticsService() {
-  //!USE ENV
-  const projectKey = 'phc_9XGZpZROmsbTNXhUcpcBBOpHkzk9m1FfBw2L0HxfQcs';
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY!;
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST!;
+  const url = process.env.NEXT_PUBLIC_POSTHOG_INGESTION_URL;
 
-  const posthogUrl = 'https://us.i.posthog.com/capture/';
+  if (!key) {
+    throw new Error(
+      'NEXT_PUBLIC_POSTHOG_KEY is not set. Please set the environment variable.',
+    );
+  }
 
-  return new PostHogAnalyticsService(projectKey, posthogUrl);
+  if (!host) {
+    throw new Error(
+      'NEXT_PUBLIC_POSTHOG_HOST is not set. Please set the environment variable.',
+    );
+  }
+
+  return new PostHogAnalyticsService(key, host, url);
 }
 
 /**
- * Posthog analytics service that sends events to Posthog.
+ * PostHog analytics service that sends events to PostHog.
  */
 class PostHogAnalyticsService {
-  private userId: string | undefined;
-  private initialized = false;
+  private client: ClientPostHogImpl | ServerPostHogImpl;
+  private userId?: string;
 
   constructor(
-    private readonly projectKey: string,
-    private readonly url: string,
-  ) {}
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async initialize() {
-    if (!this.projectKey) {
-      console.warn(
-        'Posthog project key is not set. Skipping Posthog analytics initialization.',
-      );
-
-      return;
-    }
-
-    this.initialized = true;
+    private posthogKey: string,
+    private posthogHost: string,
+    private posthogIngestUrl?: string,
+  ) {
+    this.client = isOnServer
+      ? new ServerPostHogImpl(posthogKey, posthogHost)
+      : new ClientPostHogImpl(posthogKey, posthogHost, posthogIngestUrl);
   }
 
-  async trackPageView(path: string) {
-    if (!this.initialized) {
-      this.logUninitializedError('trackPageView');
+  async initialize() {
+    this.log('Initializing PostHog analytics service');
+
+    if (!this.posthogKey || !this.posthogHost) {
+      this.log('PostHog key or host not provided, skipping initialization');
       return;
     }
 
-    if (!this.userId) {
-      this.logUnidentifiedError('trackPageView');
-      return;
-    }
+    return this.client.initialize();
+  }
 
-    const url = new URL(path, window.location.origin).href;
+  async identify(userId: string, traits?: Record<string, string>) {
+    this.log(`Identifying user ${userId} with traits:`, traits);
 
-    return captureEvent(
-      this.url,
-      '$pageview',
-      {
-        $current_url: url,
-      },
-      this.userId,
-      this.projectKey,
-    );
+    this.userId = userId;
+
+    return this.client.identify(userId, traits);
+  }
+
+  async trackPageView(url: string) {
+    this.log(`Tracking page view for URL: ${url}`);
+
+    return this.client.trackPageView(url);
   }
 
   async trackEvent(
     eventName: string,
     eventProperties?: Record<string, string | string[]>,
   ) {
-    if (!this.initialized) {
-      this.logUninitializedError('trackEvent');
-      return;
-    }
+    this.log(`Tracking event ${eventName} with properties:`, eventProperties);
 
-    if (!this.userId) {
-      this.logUnidentifiedError('trackEvent');
-      return;
-    }
-
-    return captureEvent(
-      this.url,
-      eventName,
-      eventProperties,
-      this.userId,
-      this.projectKey,
-    );
+    return this.client.trackEvent(eventName, eventProperties);
   }
 
-  async identify(userId: string, traits: Record<string, string> = {}) {
-    if (!this.initialized) {
-      this.logUninitializedError('identify');
-      return;
-    }
-
-    this.userId = userId;
-
-    return captureEvent(this.url, '$identify', traits, userId, this.projectKey);
-  }
-
-  private logUninitializedError(method: string) {
-    console.debug(
-      `Posthog analytics service is not initialized. Skipping ${method}.`,
-    );
-  }
-
-  private logUnidentifiedError(method: string) {
-    console.debug(`User is not identified. Skipping ${method}.`);
+  private log(...args: unknown[]) {
+    this.client.log(...args);
   }
 }
 
-async function captureEvent(
-  url: string,
-  event: string,
-  properties: unknown = {},
-  userId: string,
-  projectKey: string,
-) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
+/**
+ * PostHog analytics service that sends events to PostHog on the server.
+ */
+class ServerPostHogImpl {
+  private ph: ServerPostHog | undefined;
+  private userId?: string;
 
-  const payload: {
-    api_key: string;
-    event: string;
-    properties: unknown;
-    distinct_id?: string;
-  } = {
-    api_key: projectKey,
-    event,
-    properties,
-  };
+  constructor(
+    private key: string,
+    private host: string,
+  ) {}
 
-  if (userId) {
-    payload.distinct_id = userId;
+  async initialize() {
+    const { PostHog } = await import('posthog-node');
+
+    this.ph = new PostHog(this.key, {
+      host: this.host,
+      flushAt: 1,
+      flushInterval: 0,
+    });
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(payload),
-  });
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async identify(userId: string, traits?: Record<string, string>) {
+    this.getClient().capture({
+      event: '$identify',
+      distinctId: userId,
+      properties: traits,
+    });
+  }
 
-  return (await response.json()) as unknown;
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async trackPageView(url: string) {
+    this.getClient().capture({
+      event: '$pageview',
+      distinctId: this.userId!,
+      properties: { $current_url: url },
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async trackEvent(
+    eventName: string,
+    eventProperties?: Record<string, string | string[]>,
+  ) {
+    this.getClient().capture({
+      event: eventName,
+      distinctId: this.userId!,
+      properties: eventProperties,
+    });
+  }
+
+  log(...args: unknown[]) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ServerPostHog]', ...args);
+    }
+  }
+
+  private getClient() {
+    if (!this.ph) {
+      throw new Error('PostHog client not initialized');
+    }
+
+    return this.ph;
+  }
+}
+
+/**
+ * PostHog analytics service that sends events to PostHog in the browser.
+ */
+class ClientPostHogImpl {
+  private ph: ClientPostHog | undefined;
+  private userId?: string;
+
+  constructor(
+    private key: string,
+    private host: string,
+    private ingestUrl?: string,
+  ) {}
+
+  async initialize() {
+    const { posthog } = await import('posthog-js');
+
+    posthog.init(this.key, {
+      api_host: this.ingestUrl ?? this.host,
+      ui_host: this.host,
+      persistence: 'localStorage+cookie',
+      person_profiles: 'always',
+      capture_pageview: false,
+      capture_pageleave: true,
+    });
+
+    this.ph = posthog;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async identify(userId: string, traits?: Record<string, string>) {
+    const client = this.getClient();
+
+    this.userId = userId;
+    client.identify(userId, traits);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async trackPageView(url: string) {
+    const client = this.getClient();
+
+    client.capture('$pageview', { $current_url: url });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async trackEvent(
+    eventName: string,
+    eventProperties?: Record<string, string | string[]>,
+  ) {
+    const client = this.getClient();
+
+    return client.capture(eventName, eventProperties);
+  }
+
+  log(...args: unknown[]) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ClientPostHog]', ...args);
+    }
+  }
+
+  private getClient() {
+    if (!this.ph) {
+      throw new Error('PostHog client not initialized');
+    }
+
+    return this.ph;
+  }
 }
