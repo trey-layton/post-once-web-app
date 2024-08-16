@@ -104,6 +104,7 @@ class ServerPostHogImpl {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async identify(userId: string, traits?: Record<string, string>) {
     this.getClient().capture({
       event: '$identify',
@@ -112,6 +113,7 @@ class ServerPostHogImpl {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async trackPageView(url: string) {
     this.getClient().capture({
       event: '$pageview',
@@ -120,6 +122,7 @@ class ServerPostHogImpl {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async trackEvent(
     eventName: string,
     eventProperties?: Record<string, string | string[]>,
@@ -174,6 +177,7 @@ class ClientPostHogImpl {
     this.ph = posthog;
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async identify(userId: string, traits?: Record<string, string>) {
     const client = this.getClient();
 
@@ -181,12 +185,14 @@ class ClientPostHogImpl {
     client.identify(userId, traits);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async trackPageView(url: string) {
     const client = this.getClient();
 
     client.capture('$pageview', { $current_url: url });
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async trackEvent(
     eventName: string,
     eventProperties?: Record<string, string | string[]>,
