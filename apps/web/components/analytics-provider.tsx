@@ -48,10 +48,10 @@ function useAnalyticsMapping<T extends ConsumerProvidedEventTypes>(
  */
 const analyticsMapping: AnalyticsMapping = {
   'user.signedIn': (event) => {
-    const userId = event.payload.userId;
+    const { userId, ...traits } = event.payload;
 
     if (userId) {
-      return analytics.identify(userId);
+      return analytics.identify(userId, traits);
     }
   },
   'user.signedUp': (event) => {
