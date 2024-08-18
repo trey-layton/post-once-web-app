@@ -68,33 +68,6 @@ class TwitterService {
     return data;
   }
 
-  async singlePost(params: { content: string; integrationId: string }) {
-    const integration = await this.refreshAccessToken({
-      integrationId: params.integrationId,
-    });
-
-    const response = await fetch('https://api.twitter.com/2/tweets', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${integration.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        text: params.content,
-      }),
-    });
-
-    const tweet = z
-      .object({
-        id: z.string(),
-      })
-      .parse((await response.json()).data);
-
-    return {
-      link: `https://twitter.com/${integration.username}/status/${tweet.id}`,
-    };
-  }
-
   async threadPost(params: {
     content: { text: string; type: string }[];
     integrationId: string;
@@ -135,6 +108,7 @@ class TwitterService {
         firstTweetId = tweet.id;
       }
       previousTweetId = tweet.id;
+      await delay(4000);
     }
 
     for (const tweetContent of params.content) {
@@ -156,7 +130,11 @@ class TwitterService {
     }
 
     return {
-      link: `https://twitter.com/${integration.username}/status/${firstTweetId}`,
+      link: `https://twitter.com/user/status/${firstTweetId}`,
     };
   }
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

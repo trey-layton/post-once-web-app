@@ -15,6 +15,9 @@ export const generatedContentSchema = z.object({
     z.object({
       type: z.string(),
       text: z.string(),
+      thumbnail: z.string().optional(),
+      pageTitle: z.string().optional(),
+      domain: z.string().optional(),
     }),
   ),
 });

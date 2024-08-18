@@ -12,10 +12,13 @@ import {
   Share,
   X,
 } from 'lucide-react';
+import { z } from 'zod';
 
 import { Tables } from '@kit/supabase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { cn } from '@kit/ui/utils';
+
+import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
 
 export default function TwitterPreviewPost({
   integration,
@@ -26,7 +29,7 @@ export default function TwitterPreviewPost({
     Tables<'integrations'>,
     'id' | 'avatar' | 'provider' | 'username'
   >;
-  message: { type: string; text: string };
+  message: z.infer<typeof generatedContentSchema>['content'][number];
   onSave: (newText: string) => void;
 }) {
   const [isEdit, setIsEdit] = useState(false);
@@ -84,9 +87,28 @@ export default function TwitterPreviewPost({
           </div>
         </div>
         {!isEdit ? (
-          <p className="animate-typing mx-1 space-y-2 whitespace-pre-wrap border border-background pb-2 text-sm leading-[1.125rem]">
-            {message.text}
-          </p>
+          <>
+            <p className="animate-typing mx-1 whitespace-pre-wrap border border-background pb-2 text-sm leading-[1.125rem]">
+              {message.text}
+            </p>
+            {message.thumbnail && message.pageTitle && message.domain && (
+              <>
+                <div className="relative mb-1 overflow-hidden rounded-xl border">
+                  <img
+                    src={message.thumbnail}
+                    alt={message.pageTitle}
+                    className="aspect-video object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 m-3 rounded-sm bg-black bg-opacity-60 px-1.5 py-0.5 text-xs font-medium text-white">
+                    {message.pageTitle}
+                  </div>
+                </div>
+                <div className="mb-2 text-xs text-muted-foreground">
+                  From {message.domain}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <textarea
             className={cn(
