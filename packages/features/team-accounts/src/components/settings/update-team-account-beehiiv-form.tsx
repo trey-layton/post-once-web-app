@@ -24,7 +24,10 @@ import { updateBeehiivProfile } from '../../server/actions/beehiiv-profile-serve
 const beehiivFormSchema = z.object({
   beehiivApiKey: z.string().min(1, 'Please enter your beehiiv API key'),
   publicationId: z.string().min(1, 'Please enter your publication ID'),
-  subscribeUrl: z.string().min(1, 'Please enter your subscribe URL'),
+  subscribeUrl: z
+    .string()
+    .min(1, 'Please enter your subscribe URL')
+    .url('Please enter a valid subscribe URL'),
 });
 
 export const UpdateTeamAccountBeehiivForm = ({

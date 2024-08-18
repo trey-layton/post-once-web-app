@@ -84,20 +84,7 @@ export const postContent = enhanceAction(
     const twitter = createTwitterService(client);
     const linkedin = createLinkedInService(client);
 
-    if (
-      content.provider === 'twitter' &&
-      (content.type === 'precta_tweet' || content.type === 'postcta_tweet') &&
-      content.content.length > 0 &&
-      content.content[0]?.text
-    ) {
-      return await twitter.singlePost({
-        integrationId,
-        content: content.content[0].text,
-      });
-    } else if (
-      content.provider === 'twitter' &&
-      content.type === 'thread_tweet'
-    ) {
+    if (content.provider === 'twitter') {
       return await twitter.threadPost({
         integrationId,
         content: content.content,
