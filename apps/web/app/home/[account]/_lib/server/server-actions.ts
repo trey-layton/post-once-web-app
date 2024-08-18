@@ -60,12 +60,9 @@ export const generateContent = enhanceAction(
 
       return {
         ...generatedContent,
-        content: generatedContent.content.map((item) => ({
-          ...item,
-          text: item.text
-            .replace(/<br><br>/g, '\n\n')
-            .replace(/ *<br> */g, '\n\n'),
-        })),
+        content: await Promise.all(
+          generatedContent.content.map(getLinkMetaData),
+        ),
       };
     } catch (error) {
       throw new Error('Failed to generate content.');
@@ -77,6 +74,51 @@ export const generateContent = enhanceAction(
     }),
   },
 );
+
+async function getLinkMetaData(
+  content: z.infer<typeof generatedContentSchema>['content'][number],
+  timeout: number = 3000,
+) {
+  const urlMatch = content.text.match(/(https?:\/\/[^\s]+)/g);
+  const url = urlMatch ? urlMatch[0] : null;
+
+  if (url) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch URL: ${response.statusText}`);
+      }
+
+      const html = await response.text();
+      if (!html) return content;
+
+      const pageTitle =
+        html.match(/<meta property="og:title" content="([^"]+)"\/?>/i)?.[1] ||
+        html.match(/<title>([^<]+)<\/title>/i)?.[1] ||
+        undefined;
+
+      const thumbnail =
+        html.match(/<meta property="og:image" content="([^"]+)"\/?>/i)?.[1] ||
+        undefined;
+
+      const domain = new URL(url).hostname;
+
+      if (pageTitle && thumbnail) {
+        content.text = content.text.replace(url, '');
+      }
+      return { ...content, thumbnail, pageTitle, domain };
+    } catch (error) {
+      console.error(`Error fetching URL ${url}:`, error);
+      return content;
+    }
+  }
+
+  return content;
+}
 
 export const postContent = enhanceAction(
   async ({ integrationId, content }) => {
