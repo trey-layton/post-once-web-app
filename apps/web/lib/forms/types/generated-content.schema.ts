@@ -21,3 +21,5 @@ export const generatedContentSchema = z.object({
     }),
   ),
 });
+
+export type GeneratedContent = z.infer<typeof generatedContentSchema>;

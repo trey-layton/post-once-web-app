@@ -12,6 +12,7 @@ import Content from '~/lib/content/types/content';
 
 import ThreadsLogoIcon from '../../_components/threads-logo-icon';
 import XLogoIcon from '../../_components/x-logo-icon';
+import ContentDialog from './content-dialog';
 import ContentStatusBadge from './content-status-badge';
 
 export function ContentDataTable(props: {
@@ -75,11 +76,17 @@ function getColumns(): ColumnDef<Content>[] {
       id: 'actions',
       cell({ row: { original: content } }) {
         return (
-          <div className={'flex justify-end'}>
-            <Button variant={'outline'}>Content</Button>
+          <div className={'flex justify-end gap-2'}>
+            <ContentDialog content={content} />
             {content.status === 'posted' && content.posted_url && (
-              <Button asChild variant={'outline'}>
-                <a href={content.posted_url}>Post</a>
+              <Button asChild variant={'outline'} size="sm">
+                <a
+                  href={content.posted_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Post
+                </a>
               </Button>
             )}
             {content.status === 'scheduled' && (

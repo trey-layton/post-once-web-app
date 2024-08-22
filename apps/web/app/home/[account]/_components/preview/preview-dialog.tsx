@@ -22,7 +22,7 @@ import { ScrollArea } from '@kit/ui/scroll-area';
 import { Separator } from '@kit/ui/separator';
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
-import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
+import { GeneratedContent } from '~/lib/forms/types/generated-content.schema';
 
 import { generateContent, postContent } from '../../_lib/server/server-actions';
 import LinkedInPreviewPost from './linkedin-preview-post';
@@ -47,7 +47,7 @@ export default function PreviewDialog({
   const [pending, startTransition] = useTransition();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [content, setContent] = useState<
-    z.infer<typeof generatedContentSchema> & {
+    GeneratedContent & {
       id: string;
     }
   >();
@@ -168,6 +168,7 @@ export default function PreviewDialog({
                     integration={integration}
                     message={post}
                     onSave={(newText) => handleSave(index, newText)}
+                    isViewOnly={false}
                   />
                   <Separator />
                 </div>
@@ -177,6 +178,7 @@ export default function PreviewDialog({
                     integration={integration}
                     message={post}
                     onSave={(newText) => handleSave(index, newText)}
+                    isViewOnly={false}
                   />
                   <Separator />
                 </div>

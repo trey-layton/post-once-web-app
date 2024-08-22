@@ -1,7 +1,8 @@
-import { QueryData, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-import { Database, Json } from '~/lib/database.types';
+import { Database } from '~/lib/database.types';
 
+import { GeneratedContent } from '../forms/types/generated-content.schema';
 import Content from './types/content';
 
 export function createContentService(client: SupabaseClient<Database>) {
@@ -64,7 +65,7 @@ class ContentService {
     accountId: string;
     integrationId: string;
     status: 'scheduled' | 'posted' | 'generated';
-    generatedContent: Json;
+    generatedContent: GeneratedContent;
   }) {
     const { data, error } = await this.client
       .from('content')
@@ -89,7 +90,7 @@ class ContentService {
   async updateContent(params: {
     id: string;
     status: 'scheduled' | 'posted' | 'generated';
-    editedContent?: Json;
+    editedContent?: GeneratedContent;
     postedUrl?: string;
   }) {
     const { data, error } = await this.client
