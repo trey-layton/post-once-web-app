@@ -46,8 +46,11 @@ export default function PreviewDialog({
   const workspace = useTeamAccountWorkspace();
   const [pending, startTransition] = useTransition();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [content, setContent] =
-    useState<z.infer<typeof generatedContentSchema>>();
+  const [content, setContent] = useState<
+    z.infer<typeof generatedContentSchema> & {
+      id: string;
+    }
+  >();
 
   const integration = integrations.find(
     (integration) => integration.id === formValues.account,
@@ -55,7 +58,11 @@ export default function PreviewDialog({
 
   const mutation = useMutation({
     mutationFn: () =>
-      generateContent({ ...formValues, accountId: workspace.account.id }),
+      generateContent({
+        ...formValues,
+        accountId: workspace.account.id,
+        integrationId: formValues.account,
+      }),
     onMutate: () => {
       toast.loading('Generating content...');
     },

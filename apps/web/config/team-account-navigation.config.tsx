@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Link,
   Settings,
+  Sticker,
   Users,
 } from 'lucide-react';
 
@@ -19,6 +20,12 @@ const getRoutes = (account: string) => [
     path: pathsConfig.app.accountHome.replace('[account]', account),
     Icon: <LayoutDashboard className={iconClasses} />,
     end: true,
+  },
+  {
+    label: 'Content',
+    collapsible: false,
+    path: `/home/${account}/content`,
+    Icon: <Sticker className={iconClasses} />,
   },
   {
     label: 'common:settingsTabLabel',

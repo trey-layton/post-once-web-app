@@ -1,10 +1,13 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+
 import { z } from 'zod';
 
 import { enhanceAction } from '@kit/next/actions';
 import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
+import { createContentService } from '~/lib/content/content.service';
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
@@ -29,8 +32,9 @@ export const addBeehiivApiKey = enhanceAction(
 );
 
 export const generateContent = enhanceAction(
-  async ({ beehiivArticleId, contentType, accountId }) => {
+  async ({ beehiivArticleId, contentType, accountId, integrationId }) => {
     const client = getSupabaseServerActionClient();
+    const service = createContentService(client);
 
     const {
       data: { session },
@@ -58,8 +62,16 @@ export const generateContent = enhanceAction(
         await response.json(),
       );
 
+      const { id } = await service.addContent({
+        accountId,
+        integrationId,
+        status: 'generated',
+        generatedContent: generatedContent,
+      });
+
       return {
         ...generatedContent,
+        id,
         content: await Promise.all(
           generatedContent.content.map(getLinkMetaData),
         ),
@@ -71,6 +83,7 @@ export const generateContent = enhanceAction(
   {
     schema: contentHubFormSchema.extend({
       accountId: z.string(),
+      integrationId: z.string(),
     }),
   },
 );
@@ -125,28 +138,47 @@ export const postContent = enhanceAction(
     const client = getSupabaseServerActionClient();
     const twitter = createTwitterService(client);
     const linkedin = createLinkedInService(client);
+    const contentService = createContentService(client);
+
+    let postedUrl: string | undefined;
 
     if (content.provider === 'twitter') {
-      return await twitter.threadPost({
+      const data = await twitter.threadPost({
         integrationId,
         content: content.content,
       });
+      postedUrl = data.link;
     } else if (
       content.provider === 'linkedin' &&
       content.type === 'linkedin' &&
       content.content.length > 0 &&
       content.content[0]?.text
     ) {
-      return await linkedin.singlePost({
+      const data = await linkedin.singlePost({
         integrationId,
         content: content.content[0].text,
       });
+      postedUrl = data.link;
     }
+
+    await contentService.updateContent({
+      id: content.id,
+      status: 'posted',
+      postedUrl,
+      editedContent: content,
+    });
+    revalidatePath('/home/[account]/content', 'page');
+
+    return {
+      link: postedUrl,
+    };
   },
   {
     schema: z.object({
       integrationId: z.string(),
-      content: generatedContentSchema,
+      content: generatedContentSchema.extend({
+        id: z.string(),
+      }),
     }),
   },
 );
