@@ -38,7 +38,7 @@ revoke all on public.content from public, service_role;
  
 -- grant required permissions on public.content
 grant select, insert, update, delete on public.content to authenticated;
-grant select, insert on public.content to service_role;
+grant select, insert, update on public.content to service_role;
  
 -- Indexes
 create index ix_content_account_id on public.content(account_id);

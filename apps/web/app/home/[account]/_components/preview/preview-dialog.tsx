@@ -35,7 +35,11 @@ import { Stepper } from '@kit/ui/stepper';
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import { GeneratedContent } from '~/lib/forms/types/generated-content.schema';
 
-import { generateContent, postContent } from '../../_lib/server/server-actions';
+import {
+  generateContent,
+  postContent,
+  scheduleContent,
+} from '../../_lib/server/server-actions';
 import LinkedInPreviewPost from './linkedin-preview-post';
 import TwitterPreviewPost from './twitter-preview-post';
 
@@ -154,7 +158,41 @@ export default function PreviewDialog({
 
   function handleSchedule(time: string) {
     if (!content) return;
-    toast.success('schedule api call here');
+    startTransition(() => {
+      toast.promise(
+        scheduleContent({
+          integrationId: formValues.account,
+          content,
+          scheduledTime: time,
+        }),
+        {
+          loading: 'Scheduling content...',
+          success: (res) => {
+            setIsDialogOpen(false);
+            emit({
+              type: 'content.schedule',
+              payload: {
+                contentType: formValues.contentType,
+                success: 'true',
+                scheduleTime: time,
+              },
+            });
+            return 'Your content has been scheduled!';
+          },
+          error: () => {
+            emit({
+              type: 'content.schedule',
+              payload: {
+                contentType: formValues.contentType,
+                success: 'false',
+                scheduleTime: time,
+              },
+            });
+            return 'Failed to schedule content. Please try again.';
+          },
+        },
+      );
+    });
   }
 
   const handleSave = useCallback(
@@ -286,7 +324,17 @@ export function ScheduleForm({
   });
 
   function onSubmit(values: z.infer<typeof scheduleFormSchema>) {
-    onSchedule(values.time);
+    onSchedule(
+      new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
+      }).format(new Date(values.time)),
+    );
   }
 
   return (

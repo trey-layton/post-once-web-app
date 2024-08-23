@@ -182,3 +182,28 @@ export const postContent = enhanceAction(
     }),
   },
 );
+
+export const scheduleContent = enhanceAction(
+  async ({ content, scheduledTime }) => {
+    const client = getSupabaseServerActionClient();
+    const contentService = createContentService(client);
+
+    await contentService.updateContent({
+      id: content.id,
+      status: 'scheduled',
+      editedContent: content,
+      scheduledAt: scheduledTime,
+    });
+
+    revalidatePath('/home/[account]/content', 'page');
+  },
+  {
+    schema: z.object({
+      integrationId: z.string(),
+      content: generatedContentSchema.extend({
+        id: z.string(),
+      }),
+      scheduledTime: z.string(),
+    }),
+  },
+);

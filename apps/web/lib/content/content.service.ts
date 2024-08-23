@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
-import { Database } from '~/lib/database.types';
+import { Database, Tables } from '~/lib/database.types';
 
 import { GeneratedContent } from '../forms/types/generated-content.schema';
 import Content from './types/content';
@@ -92,15 +92,22 @@ class ContentService {
     status: 'scheduled' | 'posted' | 'generated';
     editedContent?: GeneratedContent;
     postedUrl?: string;
+    scheduledAt?: string;
   }) {
+    const updatedContent: Partial<Tables<'content'>> = {
+      status: params.status,
+      edited_content: params.editedContent,
+      posted_url: params.postedUrl,
+      scheduled_at: params.scheduledAt,
+    };
+
+    if (params.status === 'posted') {
+      updatedContent.posted_at = new Date().toISOString();
+    }
+
     const { data, error } = await this.client
       .from('content')
-      .update({
-        status: params.status,
-        edited_content: params.editedContent,
-        posted_url: params.postedUrl,
-        posted_at: params.status === 'posted' ? new Date().toISOString() : null,
-      })
+      .update(updatedContent)
       .eq('id', params.id);
 
     if (error) {

@@ -66,7 +66,7 @@ function getColumns(): ColumnDef<Content>[] {
     {
       header: 'Scheduled For',
       cell({ row: { original: content } }) {
-        return content.scheduled_at && content.status === 'scheduled'
+        return content.scheduled_at
           ? getDateString(content.scheduled_at)
           : null;
       },
@@ -77,7 +77,6 @@ function getColumns(): ColumnDef<Content>[] {
       cell({ row: { original: content } }) {
         return (
           <div className={'flex justify-end gap-2'}>
-            <ContentDialog content={content} />
             {content.status === 'posted' && content.posted_url && (
               <Button asChild variant={'outline'} size="sm">
                 <a
@@ -90,10 +89,11 @@ function getColumns(): ColumnDef<Content>[] {
               </Button>
             )}
             {content.status === 'scheduled' && (
-              <Button asChild variant={'destructive'}>
+              <Button variant={'destructive'} size="sm" disabled>
                 Cancel
               </Button>
             )}
+            <ContentDialog content={content} />
           </div>
         );
       },
