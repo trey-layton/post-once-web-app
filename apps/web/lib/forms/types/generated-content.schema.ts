@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
 export const generatedContentSchema = z.object({
-  status: z.string(),
-  message: z.string(),
   provider: z.enum(['twitter', 'linkedin', 'threads']),
   type: z.enum([
     'precta_tweet',
@@ -20,4 +18,5 @@ export const generatedContentSchema = z.object({
       domain: z.string().optional(),
     }),
   ),
+  thumbnail_url: z.string().optional(),
 });
