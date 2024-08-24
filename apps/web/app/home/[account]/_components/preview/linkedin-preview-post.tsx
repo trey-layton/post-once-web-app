@@ -106,19 +106,19 @@ export default function LinkedInPreviewPost({
       )}
       <div className="mt-2 flex items-center justify-between gap-4 px-6 text-muted-foreground">
         <div className="flex flex-col items-center gap-0.5">
-          <ThumbsUp className="h-4 w-4" />
+          <ThumbsUp className="h-4 w-4 scale-x-[-1]" />
           <span className="text-xs font-medium">Like</span>
         </div>
         <div className="flex flex-col items-center gap-0.5">
-          <MessageSquareText className="h-4 w-4" />
+          <MessageSquareText className="h-4 w-4 scale-x-[-1]" />
           <span className="text-xs font-medium">Comment</span>
         </div>
         <div className="flex flex-col items-center gap-0.5">
-          <Repeat2 className="h-4 w-4" />
+          <Repeat2 className="h-4 w-4 rotate-90" />
           <span className="text-xs font-medium">Repost</span>
         </div>
         <div className="flex flex-col items-center gap-0.5">
-          <MousePointer2 className="h-4 w-4" />
+          <MousePointer2 className="h-4 w-4 scale-x-[-1]" />
           <span className="text-xs font-medium">Send</span>
         </div>
       </div>
