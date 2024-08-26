@@ -58,24 +58,64 @@ export const generateContent = enhanceAction(
         throw new Error(`Error: ${response.statusText}`);
       }
 
-      const generatedContent = generatedContentSchema.parse(
-        await response.json(),
-      );
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      const { id } = await service.addContent({
-        accountId,
-        integrationId,
-        status: 'generated',
-        generatedContent: generatedContent,
-      });
+      if (!reader) {
+        throw new Error('Unable to read stream');
+      }
 
-      return {
-        ...generatedContent,
-        id,
-        content: await Promise.all(
-          generatedContent.content.map(getLinkMetaData),
-        ),
-      };
+      let accumulatedChunks = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedChunks += chunk;
+      }
+
+      const jsonObjects = accumulatedChunks.split('\n').filter(Boolean);
+
+      let finalResult;
+      try {
+        const lastJsonObject = jsonObjects[jsonObjects.length - 1];
+        if (lastJsonObject === undefined) {
+          throw new Error('No valid JSON objects found in the response');
+        }
+        finalResult = JSON.parse(lastJsonObject);
+      } catch (error) {
+        console.error('Error parsing final chunk:', error);
+        throw new Error(`Failed to parse the generated content: ${error}`);
+      }
+
+      if (finalResult.status === 'completed' && finalResult.result) {
+        let generatedContent;
+        let contentId;
+        try {
+          generatedContent = generatedContentSchema.parse(finalResult.result);
+
+          const { id } = await service.addContent({
+            accountId,
+            integrationId,
+            status: 'generated',
+            generatedContent: generatedContent,
+          });
+          contentId = id;
+        } catch (error) {
+          console.error('Error parsing generated content:', error);
+          throw new Error('Generated content does not match expected schema');
+        }
+
+        return {
+          ...generatedContent,
+          id: contentId,
+          content: await Promise.all(
+            generatedContent.content.map(getLinkMetaData),
+          ),
+        };
+      } else {
+        throw new Error('Content generation did not complete successfully');
+      }
     } catch (error) {
       throw new Error('Failed to generate content.');
     }
@@ -90,7 +130,7 @@ export const generateContent = enhanceAction(
 
 async function getLinkMetaData(
   content: z.infer<typeof generatedContentSchema>['content'][number],
-  timeout: number = 3000,
+  timeout = 3000,
 ) {
   const urlMatch = content.text.match(/(https?:\/\/[^\s]+)/g);
   const url = urlMatch ? urlMatch[0] : null;
@@ -102,6 +142,8 @@ async function getLinkMetaData(
     try {
       const response = await fetch(url, { signal: controller.signal });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch URL: ${response.statusText}`);
       }
@@ -110,12 +152,12 @@ async function getLinkMetaData(
       if (!html) return content;
 
       const pageTitle =
-        html.match(/<meta property="og:title" content="([^"]+)"\/?>/i)?.[1] ||
-        html.match(/<title>([^<]+)<\/title>/i)?.[1] ||
+        html.match(/<meta property="og:title" content="([^"]+)"\/?>/i)?.[1] ??
+        html.match(/<title>([^<]+)<\/title>/i)?.[1] ??
         undefined;
 
       const thumbnail =
-        html.match(/<meta property="og:image" content="([^"]+)"\/?>/i)?.[1] ||
+        html.match(/<meta property="og:image" content="([^"]+)"\/?>/i)?.[1] ??
         undefined;
 
       const domain = new URL(url).hostname;
@@ -125,8 +167,14 @@ async function getLinkMetaData(
       }
       return { ...content, thumbnail, pageTitle, domain };
     } catch (error) {
-      console.error(`Error fetching URL ${url}:`, error);
+      if ((error as Error)?.name === 'AbortError') {
+        console.warn(`Fetch for URL ${url} aborted due to timeout`);
+      } else {
+        console.error(`Error fetching URL ${url}:`, error);
+      }
       return content;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
