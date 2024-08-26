@@ -300,6 +300,77 @@ export type Database = {
         }
         Relationships: []
       }
+      content: {
+        Row: {
+          account_id: string
+          created_at: string
+          edited_content: Json | null
+          generated_content: Json | null
+          id: string
+          integration_id: string
+          posted_at: string | null
+          posted_url: string | null
+          scheduled_at: string | null
+          status: Database["public"]["Enums"]["content_status"]
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          edited_content?: Json | null
+          generated_content?: Json | null
+          id?: string
+          integration_id: string
+          posted_at?: string | null
+          posted_url?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          edited_content?: Json | null
+          generated_content?: Json | null
+          id?: string
+          integration_id?: string
+          posted_at?: string | null
+          posted_url?: string | null
+          scheduled_at?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_account_workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integrations: {
         Row: {
           access_token: string
@@ -1058,7 +1129,10 @@ export type Database = {
         | "integrations.delete"
         | "account_profiles.update"
         | "account_profiles.delete"
+        | "content.update"
+        | "content.delete"
       billing_provider: "stripe" | "lemon-squeezy" | "paddle"
+      content_status: "scheduled" | "posted" | "generated"
       integration_provider: "linkedin" | "twitter" | "threads"
       notification_channel: "in_app" | "email"
       notification_type: "info" | "warning" | "error"

@@ -186,7 +186,10 @@ function Pagination<T>({
         <Trans
           i18nKey={'common:pageOfPages'}
           values={{
-            page: table.getState().pagination.pageIndex + 1,
+            page:
+              table.getPageCount() !== 0
+                ? table.getState().pagination.pageIndex + 1
+                : 0,
             total: table.getPageCount(),
           }}
         />

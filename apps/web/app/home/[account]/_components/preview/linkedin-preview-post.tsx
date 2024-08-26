@@ -17,18 +17,32 @@ import { Tables } from '@kit/supabase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { cn } from '@kit/ui/utils';
 
+type LinkedInPreviewPostProps =
+  | {
+      isViewOnly: true;
+      integration?: Pick<
+        Tables<'integrations'>,
+        'avatar' | 'provider' | 'username'
+      >;
+      message: { type: string; text: string };
+      onSave?: never;
+    }
+  | {
+      isViewOnly: false;
+      integration?: Pick<
+        Tables<'integrations'>,
+        'avatar' | 'provider' | 'username'
+      >;
+      message: { type: string; text: string };
+      onSave: (newText: string) => void;
+    };
+
 export default function LinkedInPreviewPost({
   integration,
   message,
   onSave,
-}: {
-  integration?: Pick<
-    Tables<'integrations'>,
-    'id' | 'avatar' | 'provider' | 'username'
-  >;
-  message: { type: string; text: string };
-  onSave: (newText: string) => void;
-}) {
+  isViewOnly,
+}: LinkedInPreviewPostProps) {
   const [isEdit, setIsEdit] = useState(false);
   const [editedText, setEditedText] = useState(message.text);
   const [hasError, setHasError] = useState(false);
@@ -36,41 +50,42 @@ export default function LinkedInPreviewPost({
   return (
     <>
       <div className="relative flex items-start gap-4 px-1">
-        {!isEdit ? (
-          <button
-            className="absolute right-1 top-1 text-muted-foreground/70 transition hover:text-muted-foreground"
-            onClick={() => setIsEdit(true)}
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-        ) : (
-          <div className="absolute right-1 top-1 flex gap-2">
+        {!isViewOnly &&
+          (!isEdit ? (
             <button
-              className="text-muted-foreground transition hover:text-red-500 dark:hover:text-red-400"
-              onClick={() => {
-                setIsEdit(false);
-                setEditedText(message.text);
-                setHasError(false);
-              }}
+              className="absolute right-1 top-1 text-muted-foreground/70 transition hover:text-muted-foreground"
+              onClick={() => setIsEdit(true)}
             >
-              <X className="h-5 w-5" />
+              <Pencil className="h-4 w-4" />
             </button>
-            <button
-              className="text-muted-foreground transition hover:text-green-500 dark:hover:text-green-400"
-              onClick={() => {
-                if (editedText.trim() === '') {
-                  setHasError(true);
-                } else {
+          ) : (
+            <div className="absolute right-1 top-1 flex gap-2">
+              <button
+                className="text-muted-foreground transition hover:text-red-500 dark:hover:text-red-400"
+                onClick={() => {
                   setIsEdit(false);
+                  setEditedText(message.text);
                   setHasError(false);
-                  onSave(editedText);
-                }
-              }}
-            >
-              <Check className="h-5 w-5" />
-            </button>
-          </div>
-        )}
+                }}
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <button
+                className="text-muted-foreground transition hover:text-green-500 dark:hover:text-green-400"
+                onClick={() => {
+                  if (editedText.trim() === '') {
+                    setHasError(true);
+                  } else {
+                    setIsEdit(false);
+                    setHasError(false);
+                    onSave(editedText);
+                  }
+                }}
+              >
+                <Check className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
         <Avatar>
           <AvatarImage src={integration?.avatar ?? ''} />
           <AvatarFallback>

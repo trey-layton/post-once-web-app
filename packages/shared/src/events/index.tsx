@@ -14,6 +14,11 @@ export interface BaseAppEventTypes {
   // Add more base event types here
   'content.generate': { contentType: string; success: string };
   'content.post': { contentType: string; success: string; postUrl: string };
+  'content.schedule': {
+    contentType: string;
+    success: string;
+    scheduleTime: string;
+  };
 }
 
 export type ConsumerProvidedEventTypes = EmptyPayload;

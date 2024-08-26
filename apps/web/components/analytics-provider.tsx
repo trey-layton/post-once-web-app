@@ -69,6 +69,9 @@ const analyticsMapping: AnalyticsMapping = {
   'content.post': (event) => {
     return analytics.trackEvent(event.type, event.payload);
   },
+  'content.schedule': (event) => {
+    return analytics.trackEvent(event.type, event.payload);
+  },
 };
 
 /**

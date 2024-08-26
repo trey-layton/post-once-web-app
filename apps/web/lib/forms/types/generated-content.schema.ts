@@ -20,3 +20,5 @@ export const generatedContentSchema = z.object({
   ),
   thumbnail_url: z.string().optional(),
 });
+
+export type GeneratedContent = z.infer<typeof generatedContentSchema>;
