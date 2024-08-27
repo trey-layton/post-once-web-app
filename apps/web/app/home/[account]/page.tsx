@@ -2,10 +2,8 @@ import { LinkedInLogoIcon } from '@radix-ui/react-icons';
 
 import { getSupabaseServerComponentClient } from '@kit/supabase/server-component-client';
 import { createTeamAccountsApi } from '@kit/team-accounts/api';
-import { buttonVariants } from '@kit/ui/button';
 import { Card } from '@kit/ui/card';
 import { PageBody } from '@kit/ui/page';
-import { cn } from '@kit/ui/utils';
 
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
@@ -30,9 +28,6 @@ export const generateMetadata = async () => {
     title,
   };
 };
-
-//!DON'T HARDCODE
-const codeChallenge = 'sU8s5R59RD6TmljksbSQpAhuXeYQ7d7wGc1SFJnhV3c';
 
 export default async function TeamAccountHomePage({
   params,
@@ -62,7 +57,6 @@ export default async function TeamAccountHomePage({
     {
       name: 'twitter',
       label: 'Twitter',
-      authUrl: `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${process.env.NEXT_PUBLIC_TWITTER_REDIRECT_URI}?account=${team.id}&slug=${params.account}`)}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=${encodeURIComponent(params.account)}&code_challenge=${codeChallenge}&code_challenge_method=S256`,
       icon: <XLogoIcon className="h-5 w-5" />,
     },
     {
@@ -72,6 +66,7 @@ export default async function TeamAccountHomePage({
       icon: <ThreadsLogoIcon className="h-5 w-5" />,
     },
   ];
+
   return (
     <>
       <TeamAccountLayoutPageHeader
@@ -92,30 +87,14 @@ export default async function TeamAccountHomePage({
             </div>
             <div className="mt-8 space-y-6">
               {providers.map((provider, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {provider.icon}
-                      <h3 className="text-base font-semibold">
-                        {provider.label}
-                      </h3>
-                    </div>
-                    <a
-                      href={provider.authUrl}
-                      className={cn(
-                        buttonVariants({ size: 'sm' }),
-                        'w-fit text-sm',
-                      )}
-                    >
-                      Connect
-                    </a>
-                  </div>
-                  <IntegrationsDataTable
-                    data={integrations.filter(
-                      (i) => i.provider === provider.name,
-                    )}
-                  />
-                </div>
+                <IntegrationsDataTable
+                  key={index}
+                  data={integrations.filter(
+                    (i) => i.provider === provider.name,
+                  )}
+                  provider={provider}
+                  slug={params.account}
+                />
               ))}
             </div>
           </Card>
