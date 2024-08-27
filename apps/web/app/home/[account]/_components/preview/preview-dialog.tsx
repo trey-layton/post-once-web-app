@@ -208,6 +208,14 @@ export default function PreviewDialog({
     [setContent],
   );
 
+  useEffect(() => {
+    if (!isDialogOpen) {
+      setTimeout(() => {
+        setStep(0);
+      }, 500);
+    }
+  }, [isDialogOpen]);
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent className="w-[450px] px-0">

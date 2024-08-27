@@ -44,6 +44,7 @@ const contentTypes: {
   { name: 'precta_tweet', label: 'Pre-Newsletter CTA', provider: 'twitter' },
   { name: 'postcta_tweet', label: 'Post-Newsletter CTA', provider: 'twitter' },
   { name: 'thread_tweet', label: 'Thread', provider: 'twitter' },
+  { name: 'image_list', label: 'Image list', provider: 'twitter' },
   { name: 'long_form_tweet', label: 'Long-form post', provider: 'twitter' },
   { name: 'linkedin', label: 'Long-form post', provider: 'linkedin' },
 ];

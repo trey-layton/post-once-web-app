@@ -95,6 +95,11 @@ function getRemotePatterns() {
       hostname: 'beehiiv-images-production.s3.amazonaws.com',
       port: '',
     },
+    {
+      protocol: 'https',
+      hostname: 'awgdfyvscphyexzlavun.supabase.co',
+      port: '',
+    },
   ];
 
   if (SUPABASE_URL) {
@@ -120,6 +125,11 @@ function getRemotePatterns() {
         {
           protocol: 'https',
           hostname: 'beehiiv-images-production.s3.amazonaws.com',
+          port: '',
+        },
+        {
+          protocol: 'https',
+          hostname: 'awgdfyvscphyexzlavun.supabase.co',
           port: '',
         },
       ];

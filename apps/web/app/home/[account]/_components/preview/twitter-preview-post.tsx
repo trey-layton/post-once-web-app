@@ -56,7 +56,8 @@ export default function TwitterPreviewPost({
 
   return (
     <div className="relative flex items-start gap-3">
-      {!isViewOnly &&
+      {message.text.length !== 0 &&
+        !isViewOnly &&
         (!isEdit ? (
           <button
             className="absolute right-0.5 top-0.5 text-muted-foreground/70 transition hover:text-muted-foreground"
@@ -105,45 +106,46 @@ export default function TwitterPreviewPost({
             @{integration?.username} · now
           </div>
         </div>
-        {!isEdit ? (
-          <>
-            <p className="animate-typing mx-1 whitespace-pre-wrap border border-background pb-2 text-sm leading-[1.125rem]">
-              {message.text}
-            </p>
-            {message.thumbnail && message.pageTitle && message.domain && (
-              <>
-                <div className="relative mb-1 overflow-hidden rounded-xl border">
-                  <img
-                    src={message.thumbnail}
-                    alt={message.pageTitle}
-                    className="aspect-video object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 m-3 rounded-sm bg-black bg-opacity-60 px-1.5 py-0.5 text-xs font-medium text-white">
-                    {message.pageTitle}
+        {message.text.length !== 0 &&
+          (!isEdit ? (
+            <>
+              <p className="animate-typing mx-1 whitespace-pre-wrap border border-background pb-2 text-sm leading-[1.125rem]">
+                {message.text}
+              </p>
+              {message.thumbnail && message.pageTitle && message.domain && (
+                <>
+                  <div className="relative mb-1 overflow-hidden rounded-xl border">
+                    <img
+                      src={message.thumbnail}
+                      alt={message.pageTitle}
+                      className="aspect-video object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 m-3 rounded-sm bg-black bg-opacity-60 px-1.5 py-0.5 text-xs font-medium text-white">
+                      {message.pageTitle}
+                    </div>
                   </div>
-                </div>
-                <div className="mb-2 text-xs text-muted-foreground">
-                  From {message.domain}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <textarea
-            className={cn(
-              'w-full rounded-md border border-border bg-background px-1 pb-0.5 text-sm leading-[1.125rem]',
-              hasError && 'border-red-500',
-            )}
-            value={editedText}
-            onChange={(e) => setEditedText(e.target.value)}
-            rows={message.type === 'long_post' ? 20 : 3}
-          ></textarea>
-        )}
-        {media && (
-          <div className="relative mb-4 w-full overflow-hidden rounded-xl">
+                  <div className="mb-2 text-xs text-muted-foreground">
+                    From {message.domain}
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <textarea
+              className={cn(
+                'w-full rounded-md border border-border bg-background px-1 pb-0.5 text-sm leading-[1.125rem]',
+                hasError && 'border-red-500',
+              )}
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+              rows={message.type === 'long_post' ? 20 : 3}
+            ></textarea>
+          ))}
+        {(message.image_url || media) && (
+          <div className="relative mb-4 w-full overflow-hidden rounded-xl mt-2">
             <Image
-              src={media}
-              alt="LinkedIn Post Media"
+              src={message.image_url || media!}
+              alt="Twitter Post Media"
               layout="responsive"
               objectFit="cover"
               width={100}
