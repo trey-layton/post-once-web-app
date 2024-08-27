@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import Image from 'next/image';
+
 import {
   ChartNoAxesColumn,
   Check,
@@ -27,6 +29,7 @@ type TwitterPreviewPostProps =
         'avatar' | 'provider' | 'username'
       >;
       message: GeneratedContent['content'][number];
+      media?: string;
       onSave?: never;
     }
   | {
@@ -36,6 +39,7 @@ type TwitterPreviewPostProps =
         'avatar' | 'provider' | 'username'
       >;
       message: GeneratedContent['content'][number];
+      media?: string;
       onSave: (newText: string) => void;
     };
 
@@ -43,6 +47,7 @@ export default function TwitterPreviewPost({
   integration,
   message,
   onSave,
+  media,
   isViewOnly,
 }: TwitterPreviewPostProps) {
   const [isEdit, setIsEdit] = useState(false);
@@ -133,6 +138,18 @@ export default function TwitterPreviewPost({
             onChange={(e) => setEditedText(e.target.value)}
             rows={message.type === 'long_post' ? 20 : 3}
           ></textarea>
+        )}
+        {media && (
+          <div className="relative mb-4 w-full overflow-hidden rounded-xl">
+            <Image
+              src={media}
+              alt="LinkedIn Post Media"
+              layout="responsive"
+              objectFit="cover"
+              width={100}
+              height={100}
+            />
+          </div>
         )}
         <div className="ml-1 flex items-center justify-between gap-4">
           <MessageCircleIcon className="h-4 w-4 text-muted-foreground" />

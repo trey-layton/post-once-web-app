@@ -89,7 +89,13 @@ export default withBundleAnalyzer({
 function getRemotePatterns() {
   /** @type {import('next').NextConfig['remotePatterns']} */
   // add here the remote patterns for your images
-  const remotePatterns = [];
+  const remotePatterns = [
+    {
+      protocol: 'https',
+      hostname: 'beehiiv-images-production.s3.amazonaws.com',
+      port: '',
+    },
+  ];
 
   if (SUPABASE_URL) {
     const hostname = new URL(SUPABASE_URL).hostname;
@@ -110,6 +116,11 @@ function getRemotePatterns() {
         {
           protocol: 'http',
           hostname: 'localhost',
+        },
+        {
+          protocol: 'https',
+          hostname: 'beehiiv-images-production.s3.amazonaws.com',
+          port: '',
         },
       ];
 }

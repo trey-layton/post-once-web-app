@@ -233,6 +233,7 @@ export default function PreviewDialog({
                         message={post}
                         onSave={(newText) => handleSave(index, newText)}
                         isViewOnly={false}
+                        media={index === 0 ? content.thumbnail_url : undefined}
                       />
                       <Separator />
                     </div>
@@ -243,6 +244,7 @@ export default function PreviewDialog({
                         message={post}
                         onSave={(newText) => handleSave(index, newText)}
                         isViewOnly={false}
+                        media={content.thumbnail_url}
                       />
                       <Separator />
                     </div>

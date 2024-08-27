@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import Image from 'next/image';
+
 import {
   Check,
   Earth,
@@ -25,6 +27,7 @@ type LinkedInPreviewPostProps =
         'avatar' | 'provider' | 'username'
       >;
       message: { type: string; text: string };
+      media?: string;
       onSave?: never;
     }
   | {
@@ -34,6 +37,7 @@ type LinkedInPreviewPostProps =
         'avatar' | 'provider' | 'username'
       >;
       message: { type: string; text: string };
+      media?: string;
       onSave: (newText: string) => void;
     };
 
@@ -41,6 +45,7 @@ export default function LinkedInPreviewPost({
   integration,
   message,
   onSave,
+  media,
   isViewOnly,
 }: LinkedInPreviewPostProps) {
   const [isEdit, setIsEdit] = useState(false);
@@ -118,6 +123,18 @@ export default function LinkedInPreviewPost({
           onChange={(e) => setEditedText(e.target.value)}
           rows={25}
         ></textarea>
+      )}
+      {media && (
+        <div className="relative w-full">
+          <Image
+            src={media}
+            alt="LinkedIn Post Media"
+            layout="responsive"
+            objectFit="cover"
+            width={100}
+            height={100}
+          />
+        </div>
       )}
       <div className="mt-2 flex items-center justify-between gap-4 px-6 text-muted-foreground">
         <div className="flex flex-col items-center gap-0.5">
