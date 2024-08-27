@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import { z } from 'zod';
 
@@ -252,6 +254,25 @@ export const scheduleContent = enhanceAction(
         id: z.string(),
       }),
       scheduledTime: z.string(),
+    }),
+  },
+);
+
+export const getTwitterOAuth1Tokens = enhanceAction(
+  async (params) => {
+    const twitter = createTwitterService(getSupabaseServerActionClient());
+    const tokens = await twitter.getOAuth1Tokens();
+
+    cookies().set('oauth_token_secret', tokens.oauthTokenSecret);
+    cookies().set('slug', params.slug);
+
+    redirect(
+      `https://api.twitter.com/oauth/authenticate?oauth_token=${tokens.oauthToken}`,
+    );
+  },
+  {
+    schema: z.object({
+      slug: z.string(),
     }),
   },
 );

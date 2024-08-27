@@ -8,6 +8,7 @@ export const generatedContentSchema = z.object({
     'thread_tweet',
     'long_form_tweet',
     'linkedin',
+    'image_list',
   ]),
   content: z.array(
     z.object({
@@ -16,6 +17,7 @@ export const generatedContentSchema = z.object({
       thumbnail: z.string().optional(),
       pageTitle: z.string().optional(),
       domain: z.string().optional(),
+      image_url: z.string().optional(),
     }),
   ),
   thumbnail_url: z.string().optional(),

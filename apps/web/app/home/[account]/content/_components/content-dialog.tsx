@@ -39,6 +39,9 @@ export default function ContentDialog({ content }: { content: Content }) {
                     integration={content.integration_id}
                     message={post}
                     isViewOnly={true}
+                    media={
+                      index === 0 ? displayedContent.thumbnail_url : undefined
+                    }
                   />
                   {index !== displayedContent.content.length - 1 && (
                     <Separator />
@@ -50,6 +53,7 @@ export default function ContentDialog({ content }: { content: Content }) {
                     integration={integration}
                     message={post}
                     isViewOnly={true}
+                    media={displayedContent.thumbnail_url}
                   />
                   {index !== displayedContent.content.length - 1 && (
                     <Separator />

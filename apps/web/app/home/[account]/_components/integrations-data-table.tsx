@@ -3,23 +3,64 @@
 import { ColumnDef } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
-import { Button } from '@kit/ui/button';
+import { Button, buttonVariants } from '@kit/ui/button';
 import { DataTable } from '@kit/ui/data-table';
+import { cn } from '@kit/ui/utils';
 
 import { Tables } from '~/lib/database.types';
+
+import { getTwitterOAuth1Tokens } from '../_lib/server/server-actions';
 
 type Integrations = Pick<
   Tables<'integrations'>,
   'id' | 'avatar' | 'provider' | 'username'
 >;
 
-export default function IntegrationsDataTable(props: { data: Integrations[] }) {
+export default function IntegrationsDataTable({
+  data,
+  provider,
+  slug,
+}: {
+  data: Integrations[];
+  provider: {
+    label: string;
+    icon: JSX.Element;
+    authUrl?: string;
+    name: string;
+  };
+  slug: string;
+}) {
   return (
-    <DataTable
-      {...props}
-      columns={getColumns()}
-      noDataMessage="No accounts added"
-    />
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {provider.icon}
+          <h3 className="text-base font-semibold">{provider.label}</h3>
+        </div>
+        {provider.name !== 'twitter' ? (
+          <a
+            href={provider.authUrl}
+            className={cn(buttonVariants({ size: 'sm' }), 'w-fit text-sm')}
+          >
+            Connect
+          </a>
+        ) : (
+          <Button
+            size="sm"
+            className="w-fit text-sm"
+            onClick={() => getTwitterOAuth1Tokens({ slug })}
+          >
+            Connect
+          </Button>
+        )}
+      </div>
+
+      <DataTable
+        data={data}
+        columns={getColumns()}
+        noDataMessage="No accounts added"
+      />
+    </div>
   );
 }
 

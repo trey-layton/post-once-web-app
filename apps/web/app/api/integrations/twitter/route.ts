@@ -1,91 +1,112 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { createHmac } from 'crypto';
+import OAuth from 'oauth-1.0a';
 import { z } from 'zod';
 
 import { getSupabaseRouteHandlerClient } from '@kit/supabase/route-handler-client';
 
+import { loadTeamWorkspace } from '~/home/[account]/_lib/server/team-account-workspace.loader';
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
 
 //!HANDLE ERRORS
 
 export const revalidate = 0;
 
-const codeVerifier =
-  'a4c2a3b5ae3dfc053b65f077c23f9b81cd2889c2ccb0e36ec5532c554bd68758';
+const oauth = new OAuth({
+  consumer: {
+    key: process.env.TWITTER_API_KEY!,
+    secret: process.env.TWITTER_API_KEY_SECRET!,
+  },
+  signature_method: 'HMAC-SHA1',
+  hash_function: (baseString, key) =>
+    createHmac('sha1', key).update(baseString).digest('base64'),
+});
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const account = searchParams.get('account');
-  const slug = searchParams.get('slug');
+  const oauthToken = searchParams.get('oauth_token');
+  const oauthVerifier = searchParams.get('oauth_verifier');
+  const oauthTokenSecret = cookies().get('oauth_token_secret')?.value;
+  const slug = cookies().get('slug')?.value;
 
-  if (!code || !account || !slug) {
+  if (!oauthToken || !oauthVerifier || !oauthTokenSecret || !slug) {
     return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
   }
 
-  const basicAuthToken = Buffer.from(
-    `${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}:${process.env.TWITTER_CLIENT_SECRET}`,
-    'utf8',
-  ).toString('base64');
-
-  const tokenResponse = await fetch('https://api.twitter.com/2/oauth2/token', {
+  const accessRequest = {
+    url: 'https://api.twitter.com/oauth/access_token',
     method: 'POST',
+    data: { oauth_token: oauthToken, oauth_verifier: oauthVerifier },
+  };
+
+  const accessResponse = await fetch(accessRequest.url, {
+    method: accessRequest.method,
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${basicAuthToken}`,
+      ...oauth.toHeader(
+        oauth.authorize(accessRequest, {
+          key: oauthToken,
+          secret: oauthTokenSecret,
+        }),
+      ),
     },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: `${process.env.NEXT_PUBLIC_TWITTER_REDIRECT_URI}?account=${account}&slug=${slug}`,
-      code_verifier: codeVerifier,
-    }),
   });
 
-  const token = await tokenResponse.json();
+  const text = await accessResponse.text();
+  const data = new URLSearchParams(text);
+  const accessToken = data.get('oauth_token') ?? '';
+  const accessTokenSecret = data.get('oauth_token_secret') ?? '';
 
-  const tokenData = z
-    .object({
-      access_token: z.string(),
-      expires_in: z.number(),
-      refresh_token: z.string(),
-    })
-    .parse(token);
+  if (!accessToken || !accessTokenSecret) {
+    return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
+  }
 
-  const client = getSupabaseRouteHandlerClient({ admin: true });
-  const integrationsService = createIntegrationsService(client);
+  const credentialsRequest = {
+    url: 'https://api.twitter.com/1.1/account/verify_credentials.json',
+    method: 'GET',
+  };
 
-  const userInfoResponse = await fetch(
-    'https://api.twitter.com/2/users/me?user.fields=id,name,username,profile_image_url',
-    {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-      },
+  const credentialsResponse = await fetch(credentialsRequest.url, {
+    method: credentialsRequest.method,
+    headers: {
+      ...oauth.toHeader(
+        oauth.authorize(credentialsRequest, {
+          key: accessToken,
+          secret: accessTokenSecret,
+        }),
+      ),
     },
-  );
+  });
 
-  const userInfo = z
+  const credentials = z
     .object({
-      username: z.string(),
-      name: z.string(),
+      screen_name: z.string(),
       profile_image_url: z.string(),
     })
-    .parse((await userInfoResponse.json()).data);
+    .parse(await credentialsResponse.json());
 
   try {
+    const client = getSupabaseRouteHandlerClient({ admin: true });
+    const integrationsService = createIntegrationsService(client);
+
+    const { account } = await loadTeamWorkspace(slug);
+
     await integrationsService.addIntegration({
-      accountId: account,
+      accountId: account.id,
       provider: 'twitter',
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      expiresIn: tokenData.expires_in,
-      username: userInfo.username,
-      avatar: userInfo.profile_image_url,
+      accessToken: accessToken,
+      refreshToken: accessTokenSecret,
+      username: credentials.screen_name,
+      avatar: credentials.profile_image_url,
     });
   } catch (error) {
     console.error(error);
     return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
   }
+
+  cookies().delete('oauth_token_secret');
+  cookies().delete('slug');
 
   return NextResponse.redirect(new URL(`/home/${slug}`, request.url));
 }

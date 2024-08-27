@@ -8,6 +8,7 @@ export const contentHubFormSchema = z.object({
     'thread_tweet',
     'long_form_tweet',
     'linkedin',
+    'image_list',
   ]),
   account: z.string(),
 });

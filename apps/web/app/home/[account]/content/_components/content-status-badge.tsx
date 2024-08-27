@@ -16,5 +16,11 @@ export default function ContentStatusBadge({
 
     case 'posted':
       return <Badge variant={'success'}>Posted</Badge>;
+    default:
+      return (
+        <Badge variant={'secondary'} className="capitalize">
+          {status}
+        </Badge>
+      );
   }
 }
