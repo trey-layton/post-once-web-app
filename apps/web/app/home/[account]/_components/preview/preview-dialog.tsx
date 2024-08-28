@@ -85,6 +85,7 @@ export default function PreviewDialog({
     onSuccess: (res) => {
       toast.dismiss();
       toast.success('Content generated successfully.');
+      console.log('RECIEVED RESPONSE', res);
       setContent(res);
       setIsDialogOpen(true);
       setIsSubmitted(false);
@@ -229,6 +230,7 @@ export default function PreviewDialog({
             <Separator />
           </div>
         </DialogHeader>
+        {JSON.stringify(content)}
         {step === 0 && (
           <>
             <ScrollArea className="mx-2 max-h-80 px-4">

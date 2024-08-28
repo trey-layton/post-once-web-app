@@ -22,6 +22,9 @@ export const addBeehiivApiKey = enhanceAction(
     const service = createProfilesService(client);
 
     await service.addBeehiivApiKey(data);
+
+    revalidatePath('/home/[account]', 'page');
+    revalidatePath('/home/[account]/settings', 'page');
   },
   {
     schema: z.object({
@@ -93,20 +96,16 @@ export const generateContent = enhanceAction(
       if (finalResult.status === 'completed' && finalResult.result) {
         let generatedContent;
         let contentId;
-        try {
-          generatedContent = generatedContentSchema.parse(finalResult.result);
 
-          const { id } = await service.addContent({
-            accountId,
-            integrationId,
-            status: 'generated',
-            generatedContent: generatedContent,
-          });
-          contentId = id;
-        } catch (error) {
-          console.error('Error parsing generated content:', error);
-          throw new Error('Generated content does not match expected schema');
-        }
+        generatedContent = generatedContentSchema.parse(finalResult.result);
+
+        const { id } = await service.addContent({
+          accountId,
+          integrationId,
+          status: 'generated',
+          generatedContent: generatedContent,
+        });
+        contentId = id;
 
         return {
           ...generatedContent,
