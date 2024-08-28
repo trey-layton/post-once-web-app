@@ -33,7 +33,10 @@ import { Separator } from '@kit/ui/separator';
 import { Stepper } from '@kit/ui/stepper';
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
-import { GeneratedContent } from '~/lib/forms/types/generated-content.schema';
+import {
+  GeneratedContent,
+  generatedContentSchema,
+} from '~/lib/forms/types/generated-content.schema';
 
 import {
   generateContent,
@@ -85,8 +88,13 @@ export default function PreviewDialog({
     onSuccess: (res) => {
       toast.dismiss();
       toast.success('Content generated successfully.');
-      console.log('RECIEVED RESPONSE', res);
-      setContent(res);
+      setContent(
+        generatedContentSchema
+          .extend({
+            id: z.string(),
+          })
+          .parse(res),
+      );
       setIsDialogOpen(true);
       setIsSubmitted(false);
       emit({
@@ -230,7 +238,6 @@ export default function PreviewDialog({
             <Separator />
           </div>
         </DialogHeader>
-        {JSON.stringify(content)}
         {step === 0 && (
           <>
             <ScrollArea className="mx-2 max-h-80 px-4">
