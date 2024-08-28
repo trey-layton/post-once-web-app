@@ -22,6 +22,9 @@ export const addBeehiivApiKey = enhanceAction(
     const service = createProfilesService(client);
 
     await service.addBeehiivApiKey(data);
+
+    revalidatePath('/home/[account]', 'page');
+    revalidatePath('/home/[account]/settings', 'page');
   },
   {
     schema: z.object({
