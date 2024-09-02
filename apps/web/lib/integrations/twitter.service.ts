@@ -197,11 +197,21 @@ class TwitterService {
         continue;
       }
 
+      let mediaId: string | null = null;
+      if (tweetContent.image_url) {
+        mediaId = await this.uploadMedia({
+          mediaUrl: tweetContent.image_url,
+          accessToken: integration.access_token,
+          accessTokenSecret: integration.refresh_token ?? '',
+        });
+      }
+
       const request = {
         url: 'https://api.twitter.com/2/tweets',
         method: 'POST',
         body: {
           text: tweetContent.text,
+          ...(mediaId && { media: { media_ids: [mediaId] } }),
           ...(previousTweetId && {
             reply: { in_reply_to_tweet_id: previousTweetId },
           }),
@@ -266,5 +276,49 @@ class TwitterService {
     return {
       link: `https://twitter.com/user/status/${firstTweetId}`,
     };
+  }
+
+  async uploadMedia(params: {
+    mediaUrl: string;
+    accessToken: string;
+    accessTokenSecret: string;
+  }) {
+    const imageResponse = await fetch(params.mediaUrl);
+
+    if (!imageResponse.ok) {
+      throw new Error(
+        `Failed to fetch image from S3. Status: ${imageResponse.status}`,
+      );
+    }
+
+    const imageBlob = await imageResponse.blob();
+    const formData = new FormData();
+    formData.append('media', imageBlob);
+
+    const request = {
+      url: 'https://upload.twitter.com/1.1/media/upload.json',
+      method: 'POST',
+    };
+
+    const response = await fetch(request.url, {
+      method: request.method,
+      headers: {
+        ...oauth.toHeader(
+          oauth.authorize(request, {
+            key: params.accessToken,
+            secret: params.accessTokenSecret,
+          }),
+        ),
+      },
+      body: formData,
+    });
+
+    const media = z
+      .object({
+        media_id_string: z.string(),
+      })
+      .parse(await response.json());
+
+    return media.media_id_string;
   }
 }

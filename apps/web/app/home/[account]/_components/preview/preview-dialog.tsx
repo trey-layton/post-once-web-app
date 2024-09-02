@@ -86,8 +86,6 @@ export default function PreviewDialog({
       toast.loading('Generating content...');
     },
     onSuccess: (res) => {
-      toast.dismiss();
-      toast.success('Content generated successfully.');
       setContent(
         generatedContentSchema
           .extend({
@@ -95,6 +93,8 @@ export default function PreviewDialog({
           })
           .parse(res),
       );
+      toast.dismiss();
+      toast.success('Content generated successfully.');
       setIsDialogOpen(true);
       setIsSubmitted(false);
       emit({
