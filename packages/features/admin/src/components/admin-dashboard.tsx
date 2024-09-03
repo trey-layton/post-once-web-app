@@ -44,10 +44,10 @@ export async function AdminDashboard({
 
           <CardContent className="flex flex-1">
             <div className={'flex items-end justify-start gap-3'}>
-              <Figure>{data.accounts}</Figure>
+              <Figure>{data.dailyUsers[data.dailyUsers.length - 1]}</Figure>
               <Difference
-                currentValue={data?.accounts ?? 0}
-                previousValue={data.prior24hrAccounts ?? 0}
+                currentValue={data.dailyUsers[data.dailyUsers.length - 1] ?? 0}
+                previousValue={data.dailyUsers[data.dailyUsers.length - 2] ?? 0}
                 interval={'yesterday'}
               />
             </div>
@@ -138,10 +138,10 @@ export async function AdminDashboard({
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Team Accounts</CardTitle>
+            <CardTitle>Teams</CardTitle>
 
             <CardDescription>
-              The number of team accounts that have been created.
+              The number of teams that have been created.
             </CardDescription>
           </CardHeader>
 

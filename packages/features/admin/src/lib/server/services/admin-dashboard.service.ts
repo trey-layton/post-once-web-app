@@ -172,6 +172,27 @@ export class AdminDashboardService {
         return response.data.slice(0, 2);
       });
 
+    const dailyUsersPromise = fetch(
+      `https://us.posthog.com/api/projects/85428/insights/?short_id=8uenEdnC`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${process.env.POSTHOG_PERSONAL_API_KEY}`,
+        },
+      },
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data.results || !data.results[0]?.result) {
+          throw new Error('Unexpected response format from PostHog');
+        }
+        return data.results[0].result[0].data as number[];
+      })
+      .catch((error) => {
+        console.error('Error fetching daily users from PostHog:', error);
+        throw error;
+      });
+
     const [
       subscriptions,
       trials,
@@ -180,6 +201,7 @@ export class AdminDashboardService {
       teamAccounts,
       prior24hrTeamAccounts,
       topContentAccounts,
+      dailyUsers,
     ] = await Promise.all([
       subscriptionsPromise,
       trialsPromise,
@@ -188,6 +210,7 @@ export class AdminDashboardService {
       teamAccountsPromise,
       teamAccounts24hrPromise,
       topContentAccountsPromise,
+      dailyUsersPromise,
     ]);
 
     return {
@@ -198,6 +221,7 @@ export class AdminDashboardService {
       teamAccounts,
       prior24hrTeamAccounts,
       topContentAccounts,
+      dailyUsers,
     };
   }
 

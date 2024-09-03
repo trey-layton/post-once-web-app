@@ -59,16 +59,17 @@ function getColumns(): ColumnDef<Content>[] {
     },
     {
       header: 'Status',
-      cell({ row }) {
-        return <ContentStatusBadge status={row.original.status} />;
-      },
-    },
-    {
-      header: 'Scheduled For',
       cell({ row: { original: content } }) {
-        return content.scheduled_at
-          ? getDateString(content.scheduled_at)
-          : null;
+        return (
+          <ContentStatusBadge
+            status={content.status}
+            scheduledAt={
+              content.scheduled_at
+                ? getDateString(content.scheduled_at)
+                : undefined
+            }
+          />
+        );
       },
     },
     {

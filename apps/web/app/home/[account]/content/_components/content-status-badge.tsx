@@ -1,15 +1,20 @@
+import { Tables } from '@kit/supabase/database';
 import { Badge } from '@kit/ui/badge';
-
-import { Tables } from '~/lib/database.types';
 
 export default function ContentStatusBadge({
   status,
+  scheduledAt,
 }: {
   status: Tables<'content'>['status'];
+  scheduledAt?: string;
 }) {
   switch (status) {
     case 'scheduled':
-      return <Badge variant={'warning'}>Scheduled</Badge>;
+      return (
+        <Badge variant={'warning'} className="whitespace-nowrap">
+          Scheduled for {scheduledAt}
+        </Badge>
+      );
 
     case 'generated':
       return <Badge variant={'info'}>Generated</Badge>;
