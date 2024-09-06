@@ -2,16 +2,21 @@ import { AdminDashboard } from '@kit/admin/components/admin-dashboard';
 import { AdminGuard } from '@kit/admin/components/admin-guard';
 import { PageBody, PageHeader } from '@kit/ui/page';
 
-function AdminPage() {
+interface AdminPageProps {
+  searchParams: {
+    page?: string;
+  };
+}
+
+function AdminPage(props: AdminPageProps) {
   return (
     <>
-      <PageHeader
-        title={'Super Admin'}
-        description={`Your SaaS stats at a glance`}
-      />
+      <PageHeader title={'Super Admin'} />
 
       <PageBody>
-        <AdminDashboard />
+        <AdminDashboard
+          contentTablePage={Number(props.searchParams.page ?? '1')}
+        />
       </PageBody>
     </>
   );

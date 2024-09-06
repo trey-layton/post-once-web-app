@@ -8,15 +8,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { Button } from '@kit/ui/button';
 import { DataTable } from '@kit/ui/enhanced-data-table';
 
-import Content from '~/lib/content/types/content';
-
-import ThreadsLogoIcon from '../../_components/threads-logo-icon';
-import XLogoIcon from '../../_components/x-logo-icon';
+import { AdminContent } from '../lib/server/schema/admin-content.schema';
 import ContentDialog from './content-dialog';
 import ContentStatusBadge from './content-status-badge';
+import ThreadsLogoIcon from './threads-logo-icon';
+import XLogoIcon from './x-logo-icon';
 
-export function ContentDataTable(props: {
-  data: Content[];
+export function AdminContentDataTable(props: {
+  data: AdminContent[];
   pageSize: number;
   pageIndex: number;
   pageCount: number;
@@ -24,8 +23,24 @@ export function ContentDataTable(props: {
   return <DataTable {...props} columns={getColumns()} />;
 }
 
-function getColumns(): ColumnDef<Content>[] {
+function getColumns(): ColumnDef<AdminContent>[] {
   return [
+    {
+      header: 'Team',
+      cell({ row: { original: content } }) {
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={content.account_id.picture_url ?? ''} />
+              <AvatarFallback>
+                {content.account_id.name ? content.account_id.name[0] : '?'}
+              </AvatarFallback>
+            </Avatar>
+            {content.account_id.name}
+          </div>
+        );
+      },
+    },
     {
       header: 'Generated On',
       cell({ row }) {
