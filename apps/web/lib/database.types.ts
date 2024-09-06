@@ -88,7 +88,7 @@ export type Database = {
       }
       accounts: {
         Row: {
-          created_at: string | null
+          created_at: string
           created_by: string | null
           email: string | null
           id: string
@@ -102,7 +102,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
@@ -116,7 +116,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
@@ -919,7 +919,7 @@ export type Database = {
           account_name: string
         }
         Returns: {
-          created_at: string | null
+          created_at: string
           created_by: string | null
           email: string | null
           id: string
@@ -971,6 +971,18 @@ export type Database = {
       get_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_personal_accounts_count_before_24_hours: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_top_content_accounts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          picture_url: string
+          name: string
+          content_count: number
+        }[]
       }
       get_upper_system_role: {
         Args: Record<PropertyKey, never>
@@ -1229,6 +1241,7 @@ export type Database = {
           owner_id: string | null
           path_tokens: string[] | null
           updated_at: string | null
+          user_metadata: Json | null
           version: string | null
         }
         Insert: {
@@ -1242,6 +1255,7 @@ export type Database = {
           owner_id?: string | null
           path_tokens?: string[] | null
           updated_at?: string | null
+          user_metadata?: Json | null
           version?: string | null
         }
         Update: {
@@ -1255,6 +1269,7 @@ export type Database = {
           owner_id?: string | null
           path_tokens?: string[] | null
           updated_at?: string | null
+          user_metadata?: Json | null
           version?: string | null
         }
         Relationships: [
@@ -1276,6 +1291,7 @@ export type Database = {
           key: string
           owner_id: string | null
           upload_signature: string
+          user_metadata: Json | null
           version: string
         }
         Insert: {
@@ -1286,6 +1302,7 @@ export type Database = {
           key: string
           owner_id?: string | null
           upload_signature: string
+          user_metadata?: Json | null
           version: string
         }
         Update: {
@@ -1296,6 +1313,7 @@ export type Database = {
           key?: string
           owner_id?: string | null
           upload_signature?: string
+          user_metadata?: Json | null
           version?: string
         }
         Relationships: [

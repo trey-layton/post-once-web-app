@@ -78,7 +78,7 @@ export async function AdminDashboard({
                   </div>
                 </div>
                 <div className="text-muted-foreground flex-shrink-0 text-end">
-                  {account.content[0]?.count ?? 0} posts
+                  {account.content_count ?? 0} posts
                 </div>
               </div>
             ))}
@@ -236,7 +236,7 @@ function Difference({
       >{`${percentage > 0 ? '+' : ''}${percentage.toFixed(1)}%`}</span>
       <span>
         {' '}
-        from {interval} ({difference > 0 ? '+' : ''}
+        from {interval} ({difference >= 0 ? '+' : ''}
         {difference})
       </span>
     </p>

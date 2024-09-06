@@ -139,18 +139,8 @@ export class AdminDashboardService {
         return response.count;
       });
 
-    //!INEFFICIENT QUERY, WAITING FOR FIX OR USE RPC
-    //!https://github.com/supabase/supabase-js/issues/971
     const topContentAccountsPromise = this.client
-      .from('accounts')
-      .select(
-        `
-        picture_url,
-        name,
-        content(count)
-        `,
-      )
-      .eq('is_personal_account', false)
+      .rpc('get_top_content_accounts')
       .then((response) => {
         if (response.error) {
           logger.error(
@@ -161,15 +151,7 @@ export class AdminDashboardService {
           throw new Error();
         }
 
-        response.data.sort((a, b) =>
-          b.content.length > 0
-            ? (b.content[0]?.count ?? 0 - a.content.length > 0)
-              ? (a.content[0]?.count ?? 0)
-              : 0
-            : 0,
-        );
-
-        return response.data.slice(0, 2);
+        return response.data;
       });
 
     const dailyUsersPromise = fetch(
