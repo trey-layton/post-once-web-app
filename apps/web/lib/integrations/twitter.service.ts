@@ -192,8 +192,11 @@ class TwitterService {
     let firstTweetId: string | null = null;
     let previousTweetId: string | null = null;
 
+    let quoteTweet: GeneratedContent['content'][number] | null = null;
+
     for (const tweetContent of params.content) {
       if (tweetContent.type === 'quote_tweet') {
+        quoteTweet = tweetContent;
         continue;
       }
 
@@ -245,34 +248,31 @@ class TwitterService {
       await delay(4000);
     }
 
-    for (const tweetContent of params.content) {
-      if (tweetContent.type === 'quote_tweet') {
-        const quoteRequest = {
-          url: 'https://api.twitter.com/2/tweets',
-          method: 'POST',
-          body: {
-            text: tweetContent.text,
-            quote_tweet_id: firstTweetId,
-          },
-        };
+    if (quoteTweet) {
+      const quoteRequest = {
+        url: 'https://api.twitter.com/2/tweets',
+        method: 'POST',
+        body: {
+          text: quoteTweet.text,
+          quote_tweet_id: firstTweetId,
+        },
+      };
 
-        await fetch(quoteRequest.url, {
-          method: quoteRequest.method,
-          headers: {
-            ...oauth.toHeader(
-              oauth.authorize(quoteRequest, {
-                key: integration.access_token,
-                secret: integration.refresh_token ?? '',
-              }),
-            ),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(quoteRequest.body),
-        });
-
-        break;
-      }
+      await fetch(quoteRequest.url, {
+        method: quoteRequest.method,
+        headers: {
+          ...oauth.toHeader(
+            oauth.authorize(quoteRequest, {
+              key: integration.access_token,
+              secret: integration.refresh_token ?? '',
+            }),
+          ),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quoteRequest.body),
+      });
     }
+
     return {
       link: `https://twitter.com/user/status/${firstTweetId}`,
     };
