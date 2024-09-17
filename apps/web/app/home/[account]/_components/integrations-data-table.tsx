@@ -27,6 +27,7 @@ export default function IntegrationsDataTable({
     icon: JSX.Element;
     authUrl?: string;
     name: string;
+    disabled?: boolean;
   };
   slug: string;
 }) {
@@ -37,20 +38,26 @@ export default function IntegrationsDataTable({
           {provider.icon}
           <h3 className="text-base font-semibold">{provider.label}</h3>
         </div>
-        {provider.name !== 'twitter' ? (
-          <a
-            href={provider.authUrl}
-            className={cn(buttonVariants({ size: 'sm' }), 'w-fit text-sm')}
-          >
-            Connect
-          </a>
+        {provider.disabled !== true ? (
+          provider.name !== 'twitter' ? (
+            <a
+              href={provider.authUrl}
+              className={cn(buttonVariants({ size: 'sm' }), 'w-fit text-sm')}
+            >
+              Connect
+            </a>
+          ) : (
+            <Button
+              size="sm"
+              className="w-fit text-sm"
+              onClick={() => getTwitterOAuth1Tokens({ slug })}
+            >
+              Connect
+            </Button>
+          )
         ) : (
-          <Button
-            size="sm"
-            className="w-fit text-sm"
-            onClick={() => getTwitterOAuth1Tokens({ slug })}
-          >
-            Connect
+          <Button size="sm" className="w-fit text-sm" disabled>
+            Coming Soon
           </Button>
         )}
       </div>

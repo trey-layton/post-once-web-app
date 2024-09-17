@@ -66,6 +66,7 @@ export default async function TeamAccountHomePage({
       label: 'Threads',
       authUrl: `https://threads.net/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_THREADS_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://post-once-web-app.vercel.app/api/integrations/threads')}&scope=threads_basic,threads_content_publish&response_type=code&state=${encodeURIComponent(JSON.stringify({ account: team.id, slug: params.account }))}`,
       icon: <ThreadsLogoIcon className="h-5 w-5" />,
+      disabled: true,
     },
   ];
 
