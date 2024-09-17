@@ -166,7 +166,7 @@ export class AdminDashboardService {
       .then((response) => response.json())
       .then((data) => {
         if (!data.results || !data.results[0]?.result) {
-          throw new Error('Unexpected response format from PostHog');
+          return [];
         }
         return data.results[0].result[0].data as number[];
       })
