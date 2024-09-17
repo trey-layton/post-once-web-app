@@ -12,6 +12,7 @@ import { createProfilesService } from '~/lib/profiles/profiles.service';
 import BeehiivApiKeyDialog from './_components/beehiiv-api-key-dialog';
 import ContentHubForm from './_components/content-hub-form';
 import IntegrationsDataTable from './_components/integrations-data-table';
+import SubDialog from './_components/sub-dialog';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
 import ThreadsLogoIcon from './_components/threads-logo-icon';
 import XLogoIcon from './_components/x-logo-icon';
@@ -48,6 +49,12 @@ export default async function TeamAccountHomePage({
       profilesService.getProfile({ accountSlug: params.account }),
       profilesService.getBeehiivPosts({ accountSlug: params.account }),
     ]);
+
+  const sub = await api.getSubscription(team.id);
+
+  if (!sub || !sub.active) {
+    return <SubDialog slug={params.account} />;
+  }
 
   const providers = [
     {
