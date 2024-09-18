@@ -41,13 +41,13 @@ const getRoutes = (account: string) => [
         path: createPath(pathsConfig.app.accountMembers, account),
         Icon: <Users className={iconClasses} />,
       },
-      // featureFlagsConfig.enableTeamAccountBilling
-      //   ? {
-      //       label: 'common:billingTabLabel',
-      //       path: createPath(pathsConfig.app.accountBilling, account),
-      //       Icon: <CreditCard className={iconClasses} />,
-      //     }
-      //   : undefined,
+      featureFlagsConfig.enableTeamAccountBilling
+        ? {
+            label: 'common:billingTabLabel',
+            path: createPath(pathsConfig.app.accountBilling, account),
+            Icon: <CreditCard className={iconClasses} />,
+          }
+        : undefined,
     ].filter(Boolean),
   },
 ];

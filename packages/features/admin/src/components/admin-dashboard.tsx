@@ -46,8 +46,16 @@ export async function AdminDashboard({
             <div className={'flex items-end justify-start gap-3'}>
               <Figure>{data.dailyUsers[data.dailyUsers.length - 1]}</Figure>
               <Difference
-                currentValue={data.dailyUsers[data.dailyUsers.length - 1] ?? 0}
-                previousValue={data.dailyUsers[data.dailyUsers.length - 2] ?? 0}
+                currentValue={
+                  data.dailyUsers.length > 1
+                    ? (data.dailyUsers[data.dailyUsers.length - 1] ?? 0)
+                    : 0
+                }
+                previousValue={
+                  data.dailyUsers.length > 1
+                    ? (data.dailyUsers[data.dailyUsers.length - 2] ?? 0)
+                    : 0
+                }
                 interval={'yesterday'}
               />
             </div>

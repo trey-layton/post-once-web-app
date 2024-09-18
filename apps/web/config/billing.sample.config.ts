@@ -2,6 +2,8 @@
  * This is a sample billing configuration file. You should copy this file to `billing.config.ts` and then replace
  * the configuration with your own billing provider and products.
  */
+import { z } from 'zod';
+
 import { BillingProviderSchema, createBillingSchema } from '@kit/billing';
 
 // The billing provider to use. This should be set in the environment variables
@@ -11,124 +13,48 @@ const provider = BillingProviderSchema.parse(
   process.env.NEXT_PUBLIC_BILLING_PROVIDER,
 );
 
+const VariantsSchema = z.object({
+  NEXT_PUBLIC_STANDARD_PLAN_MONTHLY_VARIANT_ID: z.string().min(1),
+});
+
+const variants = VariantsSchema.parse({
+  NEXT_PUBLIC_STANDARD_PLAN_MONTHLY_VARIANT_ID:
+    process.env.NEXT_PUBLIC_STANDARD_PLAN_MONTHLY_VARIANT_ID,
+});
+
 export default createBillingSchema({
   // also update config.billing_provider in the DB to match the selected
   provider,
   // products configuration
   products: [
     {
-      id: 'starter',
-      name: 'Starter',
-      description: 'The perfect plan to get started',
+      id: 'standard',
+      name: 'Standard',
+      description: 'The full package to manage your social media content.',
       currency: 'USD',
       badge: `Value`,
       plans: [
         {
-          name: 'Starter Monthly',
-          id: 'starter-monthly',
+          name: 'Standard Monthly',
+          id: 'standard-monthly',
           paymentType: 'recurring',
           interval: 'month',
+          trialDays: 14,
           lineItems: [
             {
-              id: 'price_1NNwYHI1i3VnbZTqI2UzaHIe',
-              name: 'Addon 2',
-              cost: 9.99,
-              type: 'flat' as const,
-            },
-          ],
-        },
-        {
-          name: 'Starter Yearly',
-          id: 'starter-yearly',
-          paymentType: 'recurring',
-          interval: 'year',
-          lineItems: [
-            {
-              id: 'starter-yearly',
-              name: 'Base',
-              cost: 99.99,
+              id: variants.NEXT_PUBLIC_STANDARD_PLAN_MONTHLY_VARIANT_ID,
+              name: 'Base Price',
+              cost: 14.99,
               type: 'flat' as const,
             },
           ],
         },
       ],
-      features: ['Coming Soon'],
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      badge: `Popular`,
-      highlighted: true,
-      description: 'The perfect plan for professionals',
-      currency: 'USD',
-      plans: [
-        {
-          name: 'Pro Monthly',
-          id: 'pro-monthly',
-          paymentType: 'recurring',
-          interval: 'month',
-          lineItems: [
-            {
-              id: 'price_1PGOAVI1i3VnbZTqc69xaypm',
-              name: 'Base',
-              cost: 19.99,
-              type: 'flat',
-            },
-          ],
-        },
-        {
-          name: 'Pro Yearly',
-          id: 'pro-yearly',
-          paymentType: 'recurring',
-          interval: 'year',
-          lineItems: [
-            {
-              id: 'price_pro_yearly',
-              name: 'Base',
-              cost: 199.99,
-              type: 'flat',
-            },
-          ],
-        },
+      features: [
+        'LinkedIn & Twitter integrations',
+        'Content Generation',
+        'Content Scheduling & Posting',
       ],
-      features: ['Coming Soon'],
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'The perfect plan for enterprises',
-      currency: 'USD',
-      plans: [
-        {
-          name: 'Enterprise Monthly',
-          id: 'enterprise-monthly',
-          paymentType: 'recurring',
-          interval: 'month',
-          lineItems: [
-            {
-              id: 'price_enterprise-monthly',
-              name: 'Base',
-              cost: 29.99,
-              type: 'flat',
-            },
-          ],
-        },
-        {
-          name: 'Enterprise Yearly',
-          id: 'enterprise-yearly',
-          paymentType: 'recurring',
-          interval: 'year',
-          lineItems: [
-            {
-              id: 'price_enterprise_yearly',
-              name: 'Base',
-              cost: 299.99,
-              type: 'flat',
-            },
-          ],
-        },
-      ],
-      features: ['Coming Soon'],
     },
   ],
 });

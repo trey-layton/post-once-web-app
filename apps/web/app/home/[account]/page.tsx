@@ -12,6 +12,7 @@ import { createProfilesService } from '~/lib/profiles/profiles.service';
 import BeehiivApiKeyDialog from './_components/beehiiv-api-key-dialog';
 import ContentHubForm from './_components/content-hub-form';
 import IntegrationsDataTable from './_components/integrations-data-table';
+import SubDialog from './_components/sub-dialog';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
 import ThreadsLogoIcon from './_components/threads-logo-icon';
 import XLogoIcon from './_components/x-logo-icon';
@@ -49,6 +50,12 @@ export default async function TeamAccountHomePage({
       profilesService.getBeehiivPosts({ accountSlug: params.account }),
     ]);
 
+  const sub = await api.getSubscription(team.id);
+
+  if (!sub || !sub.active) {
+    return <SubDialog slug={params.account} />;
+  }
+
   const providers = [
     {
       name: 'linkedin',
@@ -66,6 +73,7 @@ export default async function TeamAccountHomePage({
       label: 'Threads',
       authUrl: `https://threads.net/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_THREADS_CLIENT_ID}&redirect_uri=${encodeURIComponent('https://post-once-web-app.vercel.app/api/integrations/threads')}&scope=threads_basic,threads_content_publish&response_type=code&state=${encodeURIComponent(JSON.stringify({ account: team.id, slug: params.account }))}`,
       icon: <ThreadsLogoIcon className="h-5 w-5" />,
+      disabled: true,
     },
   ];
 
