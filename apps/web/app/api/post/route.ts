@@ -12,6 +12,8 @@ import { generatedContentSchema } from '~/lib/forms/types/generated-content.sche
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 
+export const maxDuration = 60;
+
 export const POST = enhanceRouteHandler(
   async function ({ body, request }) {
     const verifier = await getDatabaseWebhookVerifier();
