@@ -57,6 +57,17 @@ function Home() {
         // }
       />
 
+      <div className="container mx-auto grid max-w-fit grid-cols-2 divide-x">
+        <div className="p-8 text-end">
+          <div className="text-4xl font-bold tracking-tight">200+</div>
+          <div>Posts created</div>
+        </div>
+        <div className="p-8">
+          <div className="text-4xl font-bold tracking-tight">700,000+</div>
+          <div>Combined followers/subs</div>
+        </div>
+      </div>
+
       <div className={'container mx-auto'}>
         <div
           className={'flex flex-col space-y-16 xl:space-y-32 2xl:space-y-36'}
@@ -114,10 +125,7 @@ function Home() {
           </FeatureShowcase>
         </div>
       </div>
-
-    
-        <TestimonialWallWidget />
-   
+      <TestimonialWallWidget />
 
       {/* <div className={'container mx-auto'}>
         <div
