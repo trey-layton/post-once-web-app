@@ -92,7 +92,7 @@ class ContentService {
     status: 'scheduled' | 'posted' | 'generated';
     editedContent?: GeneratedContent;
     postedUrl?: string;
-    scheduledAt?: string;
+    scheduledAt?: string | null;
   }) {
     const updatedContent: Partial<Tables<'content'>> = {
       status: params.status,

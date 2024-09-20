@@ -292,3 +292,23 @@ export const deleteIntegration = enhanceAction(
     }),
   },
 );
+
+export const unscheduleContent = enhanceAction(
+  async ({ id }) => {
+    const client = getSupabaseServerActionClient();
+    const contentService = createContentService(client);
+
+    await contentService.updateContent({
+      id,
+      status: 'generated',
+      scheduledAt: null,
+    });
+
+    revalidatePath('/home/[account]/content', 'page');
+  },
+  {
+    schema: z.object({
+      id: z.string(),
+    }),
+  },
+);
