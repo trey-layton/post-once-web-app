@@ -305,8 +305,9 @@ function FactorQrCode({
           }
 
           form.setValue('factorName', name);
-          form.setValue('qrCode', data.totp.qr_code);
-
+          if (data.type === 'totp') {
+            form.setValue('qrCode', data.totp.qr_code);
+          }
           // dispatch event to set factor ID
           onSetFactorId(data.id);
         }}
