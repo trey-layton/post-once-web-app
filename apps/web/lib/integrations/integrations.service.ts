@@ -42,6 +42,17 @@ class IntegrationsService {
     return data;
   }
 
+  async deleteIntegration(params: { id: string }) {
+    const { error } = await this.client
+      .from('integrations')
+      .delete()
+      .eq('id', params.id);
+
+    if (error) {
+      throw error;
+    }
+  }
+
   async getIntegrations(params: { accountSlug: string }) {
     const { data, error } = await this.client
       .from('integrations')

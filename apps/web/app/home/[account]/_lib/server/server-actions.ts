@@ -12,6 +12,7 @@ import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-clie
 import { createContentService } from '~/lib/content/content.service';
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
+import { createIntegrationsService } from '~/lib/integrations/integrations.service';
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 import { createProfilesService } from '~/lib/profiles/profiles.service';
@@ -272,6 +273,22 @@ export const getTwitterOAuth1Tokens = enhanceAction(
   {
     schema: z.object({
       slug: z.string(),
+    }),
+  },
+);
+
+export const deleteIntegration = enhanceAction(
+  async ({ id }) => {
+    const client = getSupabaseServerActionClient();
+    const service = createIntegrationsService(client);
+
+    await service.deleteIntegration({ id });
+
+    revalidatePath('/home/[account]', 'page');
+  },
+  {
+    schema: z.object({
+      id: z.string(),
     }),
   },
 );
