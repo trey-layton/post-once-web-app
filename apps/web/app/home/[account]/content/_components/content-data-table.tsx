@@ -1,8 +1,11 @@
 'use client';
 
+import { useTransition } from 'react';
+
 import { LinkedInLogoIcon } from '@radix-ui/react-icons';
 import { ColumnDef } from '@tanstack/react-table';
 import { format, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { Button } from '@kit/ui/button';
@@ -12,6 +15,7 @@ import Content from '~/lib/content/types/content';
 
 import ThreadsLogoIcon from '../../_components/threads-logo-icon';
 import XLogoIcon from '../../_components/x-logo-icon';
+import { unscheduleContent } from '../../_lib/server/server-actions';
 import ContentDialog from './content-dialog';
 import ContentStatusBadge from './content-status-badge';
 
@@ -76,6 +80,8 @@ function getColumns(): ColumnDef<Content>[] {
       header: '',
       id: 'actions',
       cell({ row: { original: content } }) {
+        const [pending, startTransition] = useTransition();
+
         return (
           <div className={'flex justify-end gap-2'}>
             {content.status === 'posted' && content.posted_url && (
@@ -90,7 +96,25 @@ function getColumns(): ColumnDef<Content>[] {
               </Button>
             )}
             {content.status === 'scheduled' && (
-              <Button variant={'destructive'} size="sm" disabled>
+              <Button
+                variant={'destructive'}
+                size="sm"
+                onClick={() =>
+                  startTransition(() => {
+                    toast.promise(
+                      unscheduleContent({
+                        id: content.id,
+                      }),
+                      {
+                        loading: 'Unscheduling post...',
+                        success: 'Post unscheduled.',
+                        error: 'Failed to unschedule.',
+                      },
+                    );
+                  })
+                }
+                disabled={pending}
+              >
                 Cancel
               </Button>
             )}

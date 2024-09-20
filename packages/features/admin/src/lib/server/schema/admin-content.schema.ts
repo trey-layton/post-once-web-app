@@ -7,11 +7,13 @@ export interface AdminContent {
   account_id: {
     picture_url: string | null;
     name: string;
+    id: string;
   };
   integration_id: {
     provider: Tables<'integrations'>['provider'];
     username: string;
     avatar: string;
+    id: string;
   };
   status: Tables<'content'>['status'];
   generated_content: GeneratedContent;

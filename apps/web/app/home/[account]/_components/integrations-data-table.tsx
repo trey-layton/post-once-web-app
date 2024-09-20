@@ -1,5 +1,7 @@
 'use client';
 
+import { useTransition } from 'react';
+
 import { ColumnDef } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
@@ -9,7 +11,10 @@ import { cn } from '@kit/ui/utils';
 
 import { Tables } from '~/lib/database.types';
 
-import { getTwitterOAuth1Tokens } from '../_lib/server/server-actions';
+import {
+  deleteIntegration,
+  getTwitterOAuth1Tokens,
+} from '../_lib/server/server-actions';
 
 type Integrations = Pick<
   Tables<'integrations'>,
@@ -75,9 +80,7 @@ function getColumns(): ColumnDef<Integrations>[] {
   return [
     {
       header: 'Accounts',
-      cell({ row }) {
-        const integration = row.original;
-
+      cell({ row: { original: integration } }) {
         return (
           <div className="flex items-center gap-2">
             <Avatar>
@@ -94,10 +97,20 @@ function getColumns(): ColumnDef<Integrations>[] {
     {
       header: '',
       id: 'actions',
-      cell() {
+      cell({ row: { original: integration } }) {
+        const [pending, startTransition] = useTransition();
+
         return (
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" className="text-sm" disabled>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-sm"
+              onClick={() =>
+                startTransition(() => deleteIntegration({ id: integration.id }))
+              }
+              disabled={pending}
+            >
               Delete
             </Button>
           </div>
