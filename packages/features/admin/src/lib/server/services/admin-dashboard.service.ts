@@ -219,12 +219,14 @@ export class AdminDashboardService {
         *,
         account_id!inner (
             picture_url,
-            name
+            name,
+            id
         ),
         integration_id (
             provider,
             username,
-            avatar
+            avatar,
+            id
         )
         `,
         {

@@ -1,15 +1,26 @@
 'use client';
 
+import Link from 'next/link';
+
 import { LinkedInLogoIcon } from '@radix-ui/react-icons';
 import { ColumnDef } from '@tanstack/react-table';
 import { format, parseISO } from 'date-fns';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { Button } from '@kit/ui/button';
+import { Dialog, DialogTrigger } from '@kit/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@kit/ui/dropdown-menu';
 import { DataTable } from '@kit/ui/enhanced-data-table';
 
 import { AdminContent } from '../lib/server/schema/admin-content.schema';
-import ContentDialog from './content-dialog';
+import ContentDialogContent from './content-dialog-content';
 import ContentStatusBadge from './content-status-badge';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
@@ -92,24 +103,58 @@ function getColumns(): ColumnDef<AdminContent>[] {
       id: 'actions',
       cell({ row: { original: content } }) {
         return (
-          <div className={'flex justify-end gap-2'}>
-            {content.status === 'posted' && content.posted_url && (
-              <Button asChild variant={'outline'} size="sm">
-                <a
-                  href={content.posted_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Post
-                </a>
-              </Button>
-            )}
-            {content.status === 'scheduled' && (
-              <Button variant={'destructive'} size="sm" disabled>
-                Cancel
-              </Button>
-            )}
-            <ContentDialog content={content} />
+          <div className="flex w-full justify-end">
+            <Dialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">Manage</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="mx-4 w-56">
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => navigator.clipboard.writeText(content.id)}
+                      title={content.id}
+                    >
+                      Copy Content ID
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        navigator.clipboard.writeText(content.account_id.id)
+                      }
+                      title={content.account_id.id}
+                    >
+                      Copy Account ID
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        navigator.clipboard.writeText(content.integration_id.id)
+                      }
+                      title={content.integration_id.id}
+                    >
+                      Copy Integration ID
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DialogTrigger asChild>
+                      <DropdownMenuItem>View Content</DropdownMenuItem>
+                    </DialogTrigger>
+                    {content.posted_url && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href={content.posted_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Post Link
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <ContentDialogContent content={content} />
+            </Dialog>
           </div>
         );
       },
