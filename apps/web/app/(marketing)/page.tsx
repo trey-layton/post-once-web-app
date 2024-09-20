@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRightIcon, LayoutDashboard } from 'lucide-react';
 
 import { PricingTable } from '@kit/billing-gateway/marketing';
+import { TestimonialWallWidget } from '@kit/testimonial/widgets';
 import {
   CtaButton,
   FeatureCard,
@@ -113,6 +114,10 @@ function Home() {
           </FeatureShowcase>
         </div>
       </div>
+
+    
+        <TestimonialWallWidget />
+   
 
       {/* <div className={'container mx-auto'}>
         <div

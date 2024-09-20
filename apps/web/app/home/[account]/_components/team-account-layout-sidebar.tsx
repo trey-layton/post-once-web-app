@@ -1,5 +1,10 @@
 import { User } from '@supabase/supabase-js';
 
+import { Star } from 'lucide-react';
+
+import { TestimonialDialog } from '@kit/testimonial/client';
+import { Button } from '@kit/ui/button';
+import { Separator } from '@kit/ui/separator';
 import { Sidebar, SidebarContent } from '@kit/ui/sidebar';
 
 import { ProfileAccountDropdownContainer } from '~/components//personal-account-dropdown-container';
@@ -68,6 +73,16 @@ function SidebarContainer(props: {
 
       <div className={'absolute bottom-4 left-0 w-full'}>
         <SidebarContent>
+          <TestimonialDialog>
+            <Button
+              variant="ghost"
+              className="flex w-full justify-start space-x-2.5 text-sm shadow-none"
+            >
+              <Star className="h-4 w-4" />
+              <span>Leave a Review</span>
+            </Button>
+          </TestimonialDialog>
+          <Separator />
           <ProfileAccountDropdownContainer
             user={props.user}
             collapsed={false}

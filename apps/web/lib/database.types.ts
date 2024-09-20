@@ -88,7 +88,7 @@ export type Database = {
       }
       accounts: {
         Row: {
-          created_at: string
+          created_at: string | null
           created_by: string | null
           email: string | null
           id: string
@@ -102,7 +102,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           email?: string | null
           id?: string
@@ -116,7 +116,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           created_by?: string | null
           email?: string | null
           id?: string
@@ -842,6 +842,51 @@ export type Database = {
           },
         ]
       }
+      testimonials: {
+        Row: {
+          content: string
+          created_at: string
+          customer_avatar_url: string | null
+          customer_company_name: string | null
+          customer_name: string
+          id: string
+          link: string | null
+          rating: number
+          source: string
+          status: Database["public"]["Enums"]["testimonial_status"]
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          customer_avatar_url?: string | null
+          customer_company_name?: string | null
+          customer_name: string
+          id?: string
+          link?: string | null
+          rating: number
+          source?: string
+          status?: Database["public"]["Enums"]["testimonial_status"]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          customer_avatar_url?: string | null
+          customer_company_name?: string | null
+          customer_name?: string
+          id?: string
+          link?: string | null
+          rating?: number
+          source?: string
+          status?: Database["public"]["Enums"]["testimonial_status"]
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       user_account_workspace: {
@@ -919,7 +964,7 @@ export type Database = {
           account_name: string
         }
         Returns: {
-          created_at: string
+          created_at: string | null
           created_by: string | null
           email: string | null
           id: string
@@ -971,10 +1016,6 @@ export type Database = {
       get_config: {
         Args: Record<PropertyKey, never>
         Returns: Json
-      }
-      get_personal_accounts_count_before_24_hours: {
-        Args: Record<PropertyKey, never>
-        Returns: number
       }
       get_top_content_accounts: {
         Args: Record<PropertyKey, never>
@@ -1159,6 +1200,7 @@ export type Database = {
         | "incomplete"
         | "incomplete_expired"
         | "paused"
+      testimonial_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       invitation: {
@@ -1241,7 +1283,6 @@ export type Database = {
           owner_id: string | null
           path_tokens: string[] | null
           updated_at: string | null
-          user_metadata: Json | null
           version: string | null
         }
         Insert: {
@@ -1255,7 +1296,6 @@ export type Database = {
           owner_id?: string | null
           path_tokens?: string[] | null
           updated_at?: string | null
-          user_metadata?: Json | null
           version?: string | null
         }
         Update: {
@@ -1269,7 +1309,6 @@ export type Database = {
           owner_id?: string | null
           path_tokens?: string[] | null
           updated_at?: string | null
-          user_metadata?: Json | null
           version?: string | null
         }
         Relationships: [
@@ -1291,7 +1330,6 @@ export type Database = {
           key: string
           owner_id: string | null
           upload_signature: string
-          user_metadata: Json | null
           version: string
         }
         Insert: {
@@ -1302,7 +1340,6 @@ export type Database = {
           key: string
           owner_id?: string | null
           upload_signature: string
-          user_metadata?: Json | null
           version: string
         }
         Update: {
@@ -1313,7 +1350,6 @@ export type Database = {
           key?: string
           owner_id?: string | null
           upload_signature?: string
-          user_metadata?: Json | null
           version?: string
         }
         Relationships: [
