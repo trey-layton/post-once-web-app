@@ -46,80 +46,76 @@ export const generateContent = enhanceAction(
       data: { session },
     } = await client.auth.getSession();
 
+    const response = await fetch(`${process.env.API_URL}/generate_content`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+      body: JSON.stringify({
+        account_id: accountId,
+        post_id: beehiivArticleId,
+        content_type: contentType,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`generate_content error: ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('Unable to read stream');
+    }
+
+    let accumulatedChunks = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      accumulatedChunks += chunk;
+    }
+
+    const jsonObjects = accumulatedChunks.split('\n').filter(Boolean);
+
+    let finalResult;
     try {
-      const response = await fetch(`${process.env.API_URL}/generate_content`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          account_id: accountId,
-          post_id: beehiivArticleId,
-          content_type: contentType,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+      const lastJsonObject = jsonObjects[jsonObjects.length - 1];
+      if (lastJsonObject === undefined) {
+        throw new Error('No valid JSON objects found in the response');
       }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error('Unable to read stream');
-      }
-
-      let accumulatedChunks = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedChunks += chunk;
-      }
-
-      const jsonObjects = accumulatedChunks.split('\n').filter(Boolean);
-
-      let finalResult;
-      try {
-        const lastJsonObject = jsonObjects[jsonObjects.length - 1];
-        if (lastJsonObject === undefined) {
-          throw new Error('No valid JSON objects found in the response');
-        }
-        finalResult = JSON.parse(lastJsonObject);
-      } catch (error) {
-        console.error('Error parsing final chunk:', error);
-        throw new Error(`Failed to parse the generated content: ${error}`);
-      }
-
-      if (finalResult.status === 'completed' && finalResult.result) {
-        let generatedContent;
-        let contentId;
-
-        generatedContent = generatedContentSchema.parse(finalResult.result);
-
-        const { id } = await service.addContent({
-          accountId,
-          integrationId,
-          status: 'generated',
-          generatedContent: generatedContent,
-        });
-        contentId = id;
-
-        return {
-          ...generatedContent,
-          id: contentId,
-          content: await Promise.all(
-            generatedContent.content.map(getLinkMetaData),
-          ),
-        };
-      } else {
-        throw new Error('Content generation did not complete successfully');
-      }
+      finalResult = JSON.parse(lastJsonObject);
     } catch (error) {
-      throw new Error('Failed to generate content.');
+      console.error('Error parsing final chunk:', error);
+      throw new Error(`Failed to parse the generated content: ${error}`);
+    }
+
+    if (finalResult.status === 'completed' && finalResult.result) {
+      let generatedContent;
+      let contentId;
+
+      generatedContent = generatedContentSchema.parse(finalResult.result);
+
+      const { id } = await service.addContent({
+        accountId,
+        integrationId,
+        status: 'generated',
+        generatedContent: generatedContent,
+      });
+      contentId = id;
+
+      return {
+        ...generatedContent,
+        id: contentId,
+        content: await Promise.all(
+          generatedContent.content.map(getLinkMetaData),
+        ),
+      };
+    } else {
+      throw new Error('Content generation did not complete successfully');
     }
   },
   {

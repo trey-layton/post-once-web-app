@@ -81,7 +81,9 @@ class ContentService {
       .single();
 
     if (error) {
-      throw error;
+      throw new Error(
+        `Failed to insert content. Params: ${JSON.stringify(params)}. Error: ${JSON.stringify(error)}`,
+      );
     }
 
     return data;
