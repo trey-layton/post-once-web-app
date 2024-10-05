@@ -97,7 +97,18 @@ export const generateContent = enhanceAction(
       let generatedContent;
       let contentId;
 
-      generatedContent = generatedContentSchema.parse(finalResult.result);
+      const parsedResult = generatedContentSchema.safeParse(finalResult.result);
+
+      if (!parsedResult.success) {
+        console.error('ZodError:', parsedResult.error.errors); // Logs the detailed error messages
+        console.error('Invalid input:', finalResult.result); // Logs the invalid object
+
+        throw new Error(
+          `Validation failed. Error details: ${JSON.stringify(parsedResult.error.errors, null, 2)}. Invalid object: ${JSON.stringify(finalResult.result, null, 2)}`,
+        );
+      } else {
+        generatedContent = parsedResult.data;
+      }
 
       const { id } = await service.addContent({
         accountId,
