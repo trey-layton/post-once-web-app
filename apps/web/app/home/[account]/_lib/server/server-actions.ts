@@ -93,7 +93,7 @@ export const generateContent = enhanceAction(
       throw new Error(`Failed to parse the generated content: ${error}`);
     }
 
-    console.warn('Final result:', finalResult);
+    console.warn('Final result:', JSON.stringify(finalResult, null, 2));
 
     if (finalResult.status === 'completed' && finalResult.result) {
       let generatedContent;
