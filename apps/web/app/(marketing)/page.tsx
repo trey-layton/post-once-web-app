@@ -24,7 +24,7 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 function Home() {
   return (
-    <div className={'mt-4 flex flex-col space-y-24 py-14'}>
+    <div className={'mt-4 flex flex-col space-y-20 py-14 sm:space-y-24'}>
       <Hero
         pill={
           <Pill label={'New'}>
@@ -32,10 +32,10 @@ function Home() {
           </Pill>
         }
         title={
-          <>
+          <div className="px-2">
             <span>Transform your Newsletter</span>
             <span>into Social Media Content</span>
-          </>
+          </div>
         }
         subtitle={
           <span>
@@ -58,12 +58,16 @@ function Home() {
       />
 
       <div className="container mx-auto grid max-w-fit grid-cols-2 divide-x">
-        <div className="p-8 text-end">
-          <div className="text-4xl font-bold tracking-tight">200+</div>
+        <div className="p-4 text-end sm:p-8">
+          <div className="text-2xl font-bold tracking-tight sm:text-4xl">
+            200+
+          </div>
           <div>Posts created</div>
         </div>
-        <div className="p-8">
-          <div className="text-4xl font-bold tracking-tight">700,000+</div>
+        <div className="p-4 sm:p-8">
+          <div className="text-2xl font-bold tracking-tight sm:text-4xl">
+            700,000+
+          </div>
           <div>Combined followers/subs</div>
         </div>
       </div>
