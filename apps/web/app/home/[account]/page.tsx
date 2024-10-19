@@ -17,7 +17,7 @@ import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-p
 import ThreadsLogoIcon from './_components/threads-logo-icon';
 import XLogoIcon from './_components/x-logo-icon';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 interface Params {
   account: string;
