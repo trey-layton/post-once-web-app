@@ -22,7 +22,7 @@ export const contentTypeSchema = z.enum([
   'postcta_tweet',
   'thread_tweet',
   'long_form_tweet',
-  'linkedin_long_form_post',
+  'long_form_post',
   'image_list',
 ]);
 

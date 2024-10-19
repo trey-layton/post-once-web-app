@@ -47,7 +47,7 @@ const contentTypes: {
   { name: 'image_list', label: 'Image list', provider: 'twitter' },
   { name: 'long_form_tweet', label: 'Long-form post', provider: 'twitter' },
   {
-    name: 'linkedin_long_form_post',
+    name: 'long_form_post',
     label: 'Long-form post',
     provider: 'linkedin',
   },

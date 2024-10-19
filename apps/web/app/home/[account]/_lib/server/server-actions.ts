@@ -231,7 +231,7 @@ export const postContent = enhanceAction(
       postedUrl = data.link;
     } else if (
       provider === 'linkedin' &&
-      contentType === 'linkedin_long_form_post' &&
+      contentType === 'long_form_post' &&
       content.post_content.length > 0 &&
       content.post_content[0]?.post_content
     ) {

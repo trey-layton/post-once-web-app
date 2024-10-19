@@ -46,7 +46,7 @@ export const POST = enhanceRouteHandler(
       });
       postedUrl = data.link;
     } else if (
-      body.content_type === 'linkedin_long_form_post' &&
+      body.content_type === 'long_form_post' &&
       content.post_content.length > 0 &&
       content.post_content[0]?.post_content
     ) {
