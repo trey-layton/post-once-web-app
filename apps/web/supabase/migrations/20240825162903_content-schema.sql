@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.content (
   account_id uuid not null references public.accounts(id) on delete cascade,
   integration_id uuid not null references public.integrations(id) on delete cascade,
   status public.content_status not null default 'generated',
+  content_type text not null,
   generated_content jsonb,
   edited_content jsonb,
   posted_url text,

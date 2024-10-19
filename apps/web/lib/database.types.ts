@@ -303,6 +303,7 @@ export type Database = {
       content: {
         Row: {
           account_id: string
+          content_type: string
           created_at: string
           edited_content: Json | null
           generated_content: Json | null
@@ -316,6 +317,7 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          content_type: string
           created_at?: string
           edited_content?: Json | null
           generated_content?: Json | null
@@ -329,6 +331,7 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          content_type?: string
           created_at?: string
           edited_content?: Json | null
           generated_content?: Json | null
