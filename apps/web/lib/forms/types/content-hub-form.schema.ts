@@ -7,7 +7,7 @@ export const contentHubFormSchema = z.object({
     'postcta_tweet',
     'thread_tweet',
     'long_form_tweet',
-    'linkedin',
+    'linkedin_long_form_post',
     'image_list',
   ]),
   account: z.string(),

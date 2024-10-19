@@ -28,7 +28,7 @@ type TwitterPreviewPostProps =
         Tables<'integrations'>,
         'avatar' | 'provider' | 'username'
       >;
-      message: GeneratedContent['content'][number];
+      message: GeneratedContent['content'][number]['post_content'][number];
       media?: string;
       onSave?: never;
     }
@@ -38,7 +38,7 @@ type TwitterPreviewPostProps =
         Tables<'integrations'>,
         'avatar' | 'provider' | 'username'
       >;
-      message: GeneratedContent['content'][number];
+      message: GeneratedContent['content'][number]['post_content'][number];
       media?: string;
       onSave: (newText: string) => void;
     };
@@ -51,12 +51,12 @@ export default function TwitterPreviewPost({
   isViewOnly,
 }: TwitterPreviewPostProps) {
   const [isEdit, setIsEdit] = useState(false);
-  const [editedText, setEditedText] = useState(message.text);
+  const [editedText, setEditedText] = useState(message.post_content);
   const [hasError, setHasError] = useState(false);
 
   return (
     <div className="relative flex items-start gap-3">
-      {message.text.length !== 0 &&
+      {message.post_content.length !== 0 &&
         !isViewOnly &&
         (!isEdit ? (
           <button
@@ -71,7 +71,7 @@ export default function TwitterPreviewPost({
               className="text-muted-foreground transition hover:text-red-500 dark:hover:text-red-400"
               onClick={() => {
                 setIsEdit(false);
-                setEditedText(message.text);
+                setEditedText(message.post_content);
                 setHasError(false);
               }}
             >
@@ -106,11 +106,11 @@ export default function TwitterPreviewPost({
             @{integration?.username} · now
           </div>
         </div>
-        {message.text.length !== 0 &&
+        {message.post_content.length !== 0 &&
           (!isEdit ? (
             <>
               <p className="animate-typing mx-1 whitespace-pre-wrap border border-background pb-2 text-sm leading-[1.125rem]">
-                {message.text}
+                {message.post_content}
               </p>
               {message.thumbnail && message.pageTitle && message.domain && (
                 <>
@@ -138,11 +138,11 @@ export default function TwitterPreviewPost({
               )}
               value={editedText}
               onChange={(e) => setEditedText(e.target.value)}
-              rows={message.type === 'long_post' ? 20 : 3}
+              rows={message.post_type === 'long_post' ? 20 : 3}
             ></textarea>
           ))}
         {(message.image_url || media) && (
-          <div className="relative mb-4 w-full overflow-hidden rounded-xl mt-2">
+          <div className="relative mb-4 mt-2 w-full overflow-hidden rounded-xl">
             <Image
               src={message.image_url || media!}
               alt="Twitter Post Media"
