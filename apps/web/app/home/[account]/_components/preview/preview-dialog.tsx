@@ -274,7 +274,7 @@ export default function PreviewDialog({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogContent
-        className="flex max-w-screen-2xl divide-x overflow-x-auto px-0"
+        className="flex w-fit max-w-screen-2xl divide-x overflow-x-auto px-0"
         closeButton={false}
       >
         {content?.content.map((postContent, postIndex) => (
