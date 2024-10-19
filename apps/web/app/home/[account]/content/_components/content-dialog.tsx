@@ -32,18 +32,16 @@ export default function ContentDialog({ content }: { content: Content }) {
         </DialogHeader>
         <ScrollArea className="mx-2 max-h-80 px-4">
           <div className="flex flex-col gap-y-3">
-            {displayedContent.content.map((post, index) => {
+            {displayedContent.post_content.map((post, index) => {
               return integration.provider === 'twitter' ? (
                 <div key={index} className="space-y-3">
                   <TwitterPreviewPost
                     integration={content.integration_id}
                     message={post}
                     isViewOnly={true}
-                    media={
-                      index === 0 ? displayedContent.thumbnail_url : undefined
-                    }
+                    media={index === 0 ? post.thumbnail : undefined}
                   />
-                  {index !== displayedContent.content.length - 1 && (
+                  {index !== displayedContent.post_content.length - 1 && (
                     <Separator />
                   )}
                 </div>
@@ -53,9 +51,9 @@ export default function ContentDialog({ content }: { content: Content }) {
                     integration={integration}
                     message={post}
                     isViewOnly={true}
-                    media={displayedContent.thumbnail_url}
+                    media={post.thumbnail}
                   />
-                  {index !== displayedContent.content.length - 1 && (
+                  {index !== displayedContent.post_content.length - 1 && (
                     <Separator />
                   )}
                 </div>

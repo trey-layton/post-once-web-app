@@ -1,5 +1,7 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+
 import { z } from 'zod';
 
 import { enhanceAction } from '@kit/next/actions';
@@ -15,6 +17,9 @@ export const updateBeehiivProfile = enhanceAction(
       publication_id: data.publicationId,
       subscribe_url: data.subscribeUrl,
     });
+
+    revalidatePath('/home/[account]', 'page');
+    revalidatePath('/home/[account]/settings', 'page');
 
     if (error) {
       throw error;

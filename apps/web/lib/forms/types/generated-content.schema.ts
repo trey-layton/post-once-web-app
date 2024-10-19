@@ -1,30 +1,35 @@
 import { z } from 'zod';
 
-export const generatedContentSchema = z.object({
-  provider: z.enum(['twitter', 'linkedin', 'threads']),
-  type: z.enum([
-    'precta_tweet',
-    'postcta_tweet',
-    'thread_tweet',
-    'long_form_tweet',
-    'linkedin_long_form_post',
-    'image_list',
-  ]),
-  content: z.array(
+export const postContentSchema = z.object({
+  post_number: z.number(),
+  post_content: z.array(
     z.object({
-      post_number: z.number(),
-      post_content: z.array(
-        z.object({
-          post_type: z.string(),
-          post_content: z.string(),
-          thumbnail: z.string().optional(),
-          pageTitle: z.string().optional(),
-          domain: z.string().optional(),
-          image_url: z.string().optional(),
-        }),
-      ),
+      post_type: z.string(),
+      post_content: z.string(),
+      thumbnail: z.string().optional(),
+      pageTitle: z.string().optional(),
+      domain: z.string().optional(),
+      image_url: z.string().optional(),
     }),
   ),
+});
+export type PostContent = z.infer<typeof postContentSchema>;
+
+export const contentProviderSchema = z.enum(['twitter', 'linkedin', 'threads']);
+
+export const contentTypeSchema = z.enum([
+  'precta_tweet',
+  'postcta_tweet',
+  'thread_tweet',
+  'long_form_tweet',
+  'linkedin_long_form_post',
+  'image_list',
+]);
+
+export const generatedContentSchema = z.object({
+  provider: contentProviderSchema,
+  type: contentTypeSchema,
+  content: z.array(postContentSchema),
   thumbnail_url: z.string().optional(),
   metadata: z
     .object({
@@ -34,5 +39,4 @@ export const generatedContentSchema = z.object({
     .optional(),
   success: z.boolean(),
 });
-
 export type GeneratedContent = z.infer<typeof generatedContentSchema>;

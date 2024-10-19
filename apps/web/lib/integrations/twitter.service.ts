@@ -8,7 +8,10 @@ import { z } from 'zod';
 
 import { Database } from '~/lib/database.types';
 
-import { GeneratedContent } from '../forms/types/generated-content.schema';
+import {
+  GeneratedContent,
+  PostContent,
+} from '../forms/types/generated-content.schema';
 
 const oauth = new OAuth({
   consumer: {
@@ -110,7 +113,7 @@ class TwitterService {
   }
 
   async threadPostOAuth2(params: {
-    content: GeneratedContent['content'];
+    content: GeneratedContent['content'][number]['post_content'];
     integrationId: string;
   }) {
     const integration = await this.refreshAccessTokenOAuth2({
@@ -121,7 +124,7 @@ class TwitterService {
     let previousTweetId: string | null = null;
 
     for (const tweetContent of params.content) {
-      if (tweetContent.type === 'quote_tweet') {
+      if (tweetContent.post_type === 'quote_tweet') {
         continue;
       }
 
@@ -132,7 +135,7 @@ class TwitterService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: tweetContent.text,
+          text: tweetContent.post_content,
           ...(previousTweetId && {
             reply: { in_reply_to_tweet_id: previousTweetId },
           }),
@@ -153,7 +156,7 @@ class TwitterService {
     }
 
     for (const tweetContent of params.content) {
-      if (tweetContent.type === 'quote_tweet') {
+      if (tweetContent.post_type === 'quote_tweet') {
         await fetch('https://api.twitter.com/2/tweets', {
           method: 'POST',
           headers: {
@@ -161,7 +164,7 @@ class TwitterService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            text: tweetContent.text,
+            text: tweetContent.post_content,
             quote_tweet_id: firstTweetId,
           }),
         });
@@ -176,7 +179,7 @@ class TwitterService {
   }
 
   async threadPost(params: {
-    content: GeneratedContent['content'];
+    content: PostContent['post_content'];
     integrationId: string;
   }) {
     const { data: integration, error } = await this.client
@@ -192,10 +195,10 @@ class TwitterService {
     let firstTweetId: string | null = null;
     let previousTweetId: string | null = null;
 
-    let quoteTweet: GeneratedContent['content'][number] | null = null;
+    let quoteTweet: PostContent['post_content'][number] | null = null;
 
     for (const tweetContent of params.content) {
-      if (tweetContent.type === 'quote_tweet') {
+      if (tweetContent.post_type === 'quote_tweet') {
         quoteTweet = tweetContent;
         continue;
       }
@@ -213,7 +216,7 @@ class TwitterService {
         url: 'https://api.twitter.com/2/tweets',
         method: 'POST',
         body: {
-          text: tweetContent.text,
+          text: tweetContent.post_content,
           ...(mediaId && { media: { media_ids: [mediaId] } }),
           ...(previousTweetId && {
             reply: { in_reply_to_tweet_id: previousTweetId },
@@ -253,7 +256,7 @@ class TwitterService {
         url: 'https://api.twitter.com/2/tweets',
         method: 'POST',
         body: {
-          text: quoteTweet.text,
+          text: quoteTweet.post_content,
           quote_tweet_id: firstTweetId,
         },
       };

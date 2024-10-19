@@ -1,5 +1,5 @@
 import { Tables } from '~/lib/database.types';
-import { GeneratedContent } from '~/lib/forms/types/generated-content.schema';
+import { PostContent } from '~/lib/forms/types/generated-content.schema';
 
 export default interface Content {
   id: string;
@@ -10,8 +10,8 @@ export default interface Content {
     avatar: string;
   };
   status: Tables<'content'>['status'];
-  generated_content: GeneratedContent;
-  edited_content?: GeneratedContent;
+  generated_content: PostContent;
+  edited_content?: PostContent;
   posted_url?: string;
   scheduled_at?: string;
   posted_at?: string;

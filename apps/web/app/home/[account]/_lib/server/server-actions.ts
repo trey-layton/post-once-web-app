@@ -11,7 +11,12 @@ import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-clie
 
 import { createContentService } from '~/lib/content/content.service';
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
-import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
+import {
+  contentProviderSchema,
+  contentTypeSchema,
+  generatedContentSchema,
+  postContentSchema,
+} from '~/lib/forms/types/generated-content.schema';
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
@@ -97,13 +102,12 @@ export const generateContent = enhanceAction(
 
     if (finalResult.status === 'completed' && finalResult.result) {
       let generatedContent;
-      let contentId;
 
       const parsedResult = generatedContentSchema.safeParse(finalResult.result);
 
       if (!parsedResult.success) {
-        console.error('ZodError:', parsedResult.error.errors); // Logs the detailed error messages
-        console.error('Invalid input:', finalResult.result); // Logs the invalid object
+        console.error('ZodError:', parsedResult.error.errors);
+        console.error('Invalid input:', finalResult.result);
 
         throw new Error(
           `Validation failed. Error details: ${JSON.stringify(parsedResult.error.errors, null, 2)}. Invalid object: ${JSON.stringify(finalResult.result, null, 2)}`,
@@ -112,17 +116,25 @@ export const generateContent = enhanceAction(
         generatedContent = parsedResult.data;
       }
 
-      const { id } = await service.addContent({
-        accountId,
-        integrationId,
-        status: 'generated',
-        generatedContent: generatedContent,
-      });
-      contentId = id;
+      generatedContent.content = await Promise.all(
+        generatedContent.content.map(async (content) => {
+          const { id } = await service.addContent({
+            accountId,
+            integrationId,
+            status: 'generated',
+            generatedContent: content,
+            contentType,
+          });
+
+          return {
+            ...content,
+            id,
+          };
+        }),
+      );
 
       return {
         ...generatedContent,
-        id: contentId,
         content: await Promise.all(
           generatedContent.content.map(getLinkMetaData),
         ),
@@ -143,57 +155,67 @@ async function getLinkMetaData(
   content: z.infer<typeof generatedContentSchema>['content'][number],
   timeout = 3000,
 ) {
-  const urlMatch = content.text.match(/(https?:\/\/[^\s]+)/g);
-  const url = urlMatch ? urlMatch[0] : null;
+  content.post_content = await Promise.all(
+    content.post_content.map(async (post) => {
+      const urlMatch = post.post_content.match(/(https?:\/\/[^\s]+)/g);
+      const url = urlMatch ? urlMatch[0] : null;
 
-  if (url) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+      if (url) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    try {
-      const response = await fetch(url, { signal: controller.signal });
+        try {
+          const response = await fetch(url, { signal: controller.signal });
 
-      clearTimeout(timeoutId);
+          clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch URL: ${response.statusText}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+          }
+
+          const html = await response.text();
+          if (!html) return post;
+
+          const pageTitle =
+            html.match(
+              /<meta property="og:title" content="([^"]+)"\/?>/i,
+            )?.[1] ??
+            html.match(/<title>([^<]+)<\/title>/i)?.[1] ??
+            undefined;
+
+          const thumbnail =
+            html.match(
+              /<meta property="og:image" content="([^"]+)"\/?>/i,
+            )?.[1] ?? undefined;
+
+          const domain = new URL(url).hostname;
+
+          if (pageTitle && thumbnail) {
+            post.post_content = post.post_content.replace(url, '');
+          }
+
+          return { ...post, thumbnail, pageTitle, domain };
+        } catch (error) {
+          if ((error as Error)?.name === 'AbortError') {
+            console.warn(`Fetch for URL ${url} aborted due to timeout`);
+          } else {
+            console.error(`Error fetching URL ${url}:`, error);
+          }
+          return post;
+        } finally {
+          clearTimeout(timeoutId);
+        }
       }
 
-      const html = await response.text();
-      if (!html) return content;
-
-      const pageTitle =
-        html.match(/<meta property="og:title" content="([^"]+)"\/?>/i)?.[1] ??
-        html.match(/<title>([^<]+)<\/title>/i)?.[1] ??
-        undefined;
-
-      const thumbnail =
-        html.match(/<meta property="og:image" content="([^"]+)"\/?>/i)?.[1] ??
-        undefined;
-
-      const domain = new URL(url).hostname;
-
-      if (pageTitle && thumbnail) {
-        content.text = content.text.replace(url, '');
-      }
-      return { ...content, thumbnail, pageTitle, domain };
-    } catch (error) {
-      if ((error as Error)?.name === 'AbortError') {
-        console.warn(`Fetch for URL ${url} aborted due to timeout`);
-      } else {
-        console.error(`Error fetching URL ${url}:`, error);
-      }
-      return content;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
+      return post;
+    }),
+  );
 
   return content;
 }
 
 export const postContent = enhanceAction(
-  async ({ integrationId, content }) => {
+  async ({ integrationId, content, contentId, provider, contentType }) => {
     const client = getSupabaseServerActionClient();
     const twitter = createTwitterService(client);
     const linkedin = createLinkedInService(client);
@@ -201,27 +223,27 @@ export const postContent = enhanceAction(
 
     let postedUrl: string | undefined;
 
-    if (content.provider === 'twitter') {
+    if (provider === 'twitter') {
       const data = await twitter.threadPost({
         integrationId,
-        content: content.content,
+        content: content.post_content,
       });
       postedUrl = data.link;
     } else if (
-      content.provider === 'linkedin' &&
-      content.type === 'linkedin' &&
-      content.content.length > 0 &&
-      content.content[0]?.text
+      provider === 'linkedin' &&
+      contentType === 'linkedin_long_form_post' &&
+      content.post_content.length > 0 &&
+      content.post_content[0]?.post_content
     ) {
       const data = await linkedin.singlePost({
         integrationId,
-        content: content.content[0].text,
+        content: content.post_content[0].post_content,
       });
       postedUrl = data.link;
     }
 
     await contentService.updateContent({
-      id: content.id,
+      id: contentId,
       status: 'posted',
       postedUrl,
       editedContent: content,
@@ -235,20 +257,21 @@ export const postContent = enhanceAction(
   {
     schema: z.object({
       integrationId: z.string(),
-      content: generatedContentSchema.extend({
-        id: z.string(),
-      }),
+      contentId: z.string(),
+      content: postContentSchema,
+      provider: contentProviderSchema,
+      contentType: contentTypeSchema,
     }),
   },
 );
 
 export const scheduleContent = enhanceAction(
-  async ({ content, scheduledTime }) => {
+  async ({ content, contentId, scheduledTime }) => {
     const client = getSupabaseServerActionClient();
     const contentService = createContentService(client);
 
     await contentService.updateContent({
-      id: content.id,
+      id: contentId,
       status: 'scheduled',
       editedContent: content,
       scheduledAt: scheduledTime,
@@ -258,10 +281,8 @@ export const scheduleContent = enhanceAction(
   },
   {
     schema: z.object({
-      integrationId: z.string(),
-      content: generatedContentSchema.extend({
-        id: z.string(),
-      }),
+      contentId: z.string(),
+      content: postContentSchema,
       scheduledTime: z.string(),
     }),
   },
