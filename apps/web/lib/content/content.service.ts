@@ -2,7 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 
 import { Database, Tables } from '~/lib/database.types';
 
-import { GeneratedContent } from '../forms/types/generated-content.schema';
+import { PostContent } from '../forms/types/generated-content.schema';
 import Content from './types/content';
 
 export function createContentService(client: SupabaseClient<Database>) {
@@ -64,8 +64,9 @@ class ContentService {
   async addContent(params: {
     accountId: string;
     integrationId: string;
-    status: 'scheduled' | 'posted' | 'generated';
-    generatedContent: GeneratedContent;
+    status: Tables<'content'>['status'];
+    contentType: Tables<'content'>['content_type'];
+    generatedContent: PostContent;
   }) {
     const { data, error } = await this.client
       .from('content')
@@ -75,6 +76,7 @@ class ContentService {
           integration_id: params.integrationId,
           status: params.status,
           generated_content: params.generatedContent,
+          content_type: params.contentType,
         },
       ])
       .select('id')
@@ -91,10 +93,10 @@ class ContentService {
 
   async updateContent(params: {
     id: string;
-    status: 'scheduled' | 'posted' | 'generated';
-    editedContent?: GeneratedContent;
+    status: Tables<'content'>['status'];
+    editedContent?: PostContent;
     postedUrl?: string;
-    scheduledAt?: string | null;
+    scheduledAt?: Tables<'content'>['scheduled_at'];
   }) {
     const updatedContent: Partial<Tables<'content'>> = {
       status: params.status,

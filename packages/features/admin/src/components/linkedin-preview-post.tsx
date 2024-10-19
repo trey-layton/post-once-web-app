@@ -19,6 +19,8 @@ import { Tables } from '@kit/supabase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@kit/ui/avatar';
 import { cn } from '@kit/ui/utils';
 
+import { PostContent } from '../lib/server/schema/admin-content.schema';
+
 type LinkedInPreviewPostProps =
   | {
       isViewOnly: true;
@@ -26,7 +28,7 @@ type LinkedInPreviewPostProps =
         Tables<'integrations'>,
         'avatar' | 'provider' | 'username'
       >;
-      message: { type: string; text: string };
+      message: PostContent['post_content'][number];
       media?: string;
       onSave?: never;
     }
@@ -36,7 +38,7 @@ type LinkedInPreviewPostProps =
         Tables<'integrations'>,
         'avatar' | 'provider' | 'username'
       >;
-      message: { type: string; text: string };
+      message: PostContent['post_content'][number];
       media?: string;
       onSave: (newText: string) => void;
     };
@@ -49,7 +51,7 @@ export default function LinkedInPreviewPost({
   isViewOnly,
 }: LinkedInPreviewPostProps) {
   const [isEdit, setIsEdit] = useState(false);
-  const [editedText, setEditedText] = useState(message.text);
+  const [editedText, setEditedText] = useState(message.post_content);
   const [hasError, setHasError] = useState(false);
 
   return (
@@ -69,7 +71,7 @@ export default function LinkedInPreviewPost({
                 className="text-muted-foreground transition hover:text-red-500 dark:hover:text-red-400"
                 onClick={() => {
                   setIsEdit(false);
-                  setEditedText(message.text);
+                  setEditedText(message.post_content);
                   setHasError(false);
                 }}
               >
@@ -111,7 +113,7 @@ export default function LinkedInPreviewPost({
       </div>
       {!isEdit ? (
         <p className="animate-typing border-background space-y-2 whitespace-pre-wrap border px-1 text-sm">
-          {message.text}
+          {message.post_content}
         </p>
       ) : (
         <textarea

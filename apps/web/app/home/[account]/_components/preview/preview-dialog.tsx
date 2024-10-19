@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, useTransition } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
+import { CircleCheckBig } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -12,6 +13,7 @@ import { z } from 'zod';
 import { useAppEvents } from '@kit/shared/events';
 import { Tables } from '@kit/supabase/database';
 import { useTeamAccountWorkspace } from '@kit/team-accounts/hooks/use-team-account-workspace';
+import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
 import { Button, buttonVariants } from '@kit/ui/button';
 import {
   Dialog,
@@ -28,14 +30,13 @@ import {
   FormMessage,
 } from '@kit/ui/form';
 import { Input } from '@kit/ui/input';
-import { ScrollArea } from '@kit/ui/scroll-area';
 import { Separator } from '@kit/ui/separator';
 import { Stepper } from '@kit/ui/stepper';
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import {
-  GeneratedContent,
   generatedContentSchema,
+  postContentSchema,
 } from '~/lib/forms/types/generated-content.schema';
 
 import {
@@ -45,6 +46,18 @@ import {
 } from '../../_lib/server/server-actions';
 import LinkedInPreviewPost from './linkedin-preview-post';
 import TwitterPreviewPost from './twitter-preview-post';
+
+//!fix schedule content
+//!fix post status among all posts
+//!fix content tables
+
+const previewContentSchema = generatedContentSchema.extend({
+  content: z.array(
+    postContentSchema.extend({
+      id: z.string(),
+    }),
+  ),
+});
 
 export default function PreviewDialog({
   isSubmitted,
@@ -64,12 +77,16 @@ export default function PreviewDialog({
   const workspace = useTeamAccountWorkspace();
   const [pending, startTransition] = useTransition();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [step, setStep] = useState(0);
-  const [content, setContent] = useState<
-    GeneratedContent & {
-      id: string;
-    }
-  >();
+  const [step, setStep] = useState<
+    {
+      step: number;
+      posted: boolean;
+      scheduled: boolean;
+      postUrl?: string;
+    }[]
+  >([]);
+  const [content, setContent] =
+    useState<z.infer<typeof previewContentSchema>>();
 
   const integration = integrations.find(
     (integration) => integration.id === formValues.account,
@@ -86,12 +103,11 @@ export default function PreviewDialog({
       toast.loading('Generating content...');
     },
     onSuccess: (res) => {
-      setContent(
-        generatedContentSchema
-          .extend({
-            id: z.string(),
-          })
-          .parse(res),
+      setContent(previewContentSchema.parse(res));
+      setStep(() =>
+        Array.from({ length: res.content.length }, () => {
+          return { step: 0, posted: false, scheduled: false };
+        }),
       );
       toast.dismiss();
       toast.success('Content generated successfully.');
@@ -119,18 +135,23 @@ export default function PreviewDialog({
     }
   }, [isSubmitted]);
 
-  function handlePost() {
-    if (!content) return;
+  function handlePost(contentId: string) {
+    const toPost = content?.content.find((c) => c.id === contentId);
+
+    if (!toPost || !content) return;
+
     startTransition(() => {
       toast.promise(
         postContent({
           integrationId: formValues.account,
-          content,
+          content: toPost,
+          contentId: contentId,
+          provider: content.provider,
+          contentType: content.type,
         }),
         {
           loading: 'Posting content...',
           success: (res) => {
-            setIsDialogOpen(false);
             emit({
               type: 'content.post',
               payload: {
@@ -139,6 +160,13 @@ export default function PreviewDialog({
                 postUrl: res?.link ?? '',
               },
             });
+            setStep((prev) =>
+              prev.map((p, i) =>
+                i === content?.content.findIndex((c) => c.id === contentId)
+                  ? { ...p, posted: true, postUrl: res?.link }
+                  : p,
+              ),
+            );
             return (
               <p>
                 <span>Your content has been posted! </span>
@@ -165,19 +193,20 @@ export default function PreviewDialog({
     });
   }
 
-  function handleSchedule(time: string) {
-    if (!content) return;
+  function handleSchedule(time: string, contentId: string) {
+    const toSchedule = content?.content.find((c) => c.id === contentId);
+
+    if (!toSchedule || !content) return;
     startTransition(() => {
       toast.promise(
         scheduleContent({
-          integrationId: formValues.account,
-          content,
+          content: toSchedule,
           scheduledTime: time,
+          contentId,
         }),
         {
           loading: 'Scheduling content...',
           success: (res) => {
-            setIsDialogOpen(false);
             emit({
               type: 'content.schedule',
               payload: {
@@ -186,6 +215,13 @@ export default function PreviewDialog({
                 scheduleTime: time,
               },
             });
+            setStep((prev) =>
+              prev.map((p, i) =>
+                i === content?.content.findIndex((c) => c.id === contentId)
+                  ? { ...p, scheduled: true }
+                  : p,
+              ),
+            );
             return 'Your content has been scheduled!';
           },
           error: () => {
@@ -205,12 +241,22 @@ export default function PreviewDialog({
   }
 
   const handleSave = useCallback(
-    (index: number, newText: string) => {
+    (postIndex: number, index: number, newText: string) => {
       setContent((prevContent) => {
         if (!prevContent) return prevContent;
-        const updatedPosts = prevContent.content.map((p, i) =>
-          i === index ? { ...p, text: newText } : p,
-        );
+
+        const updatedPosts = prevContent.content.map((p, i) => {
+          if (i === postIndex) {
+            return {
+              ...p,
+              post_content: p.post_content.map((pp, ii) =>
+                ii === index ? { ...pp, post_content: newText } : pp,
+              ),
+            };
+          }
+          return p;
+        });
+
         return { ...prevContent, content: updatedPosts };
       });
     },
@@ -220,105 +266,140 @@ export default function PreviewDialog({
   useEffect(() => {
     if (!isDialogOpen) {
       setTimeout(() => {
-        setStep(0);
+        setStep([]);
       }, 500);
     }
   }, [isDialogOpen]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="w-[450px] px-0">
-        <DialogHeader className="px-6">
-          <Stepper
-            steps={['Prepare Content', 'Schedule & Post']}
-            currentStep={step}
-            variant="numbers"
-          />
-          <div className="pt-2">
-            <Separator />
-          </div>
-        </DialogHeader>
-        {step === 0 && (
-          <>
-            <ScrollArea className="mx-2 max-h-80 px-4">
-              <div className="flex flex-col gap-y-3">
-                {content?.content.map((post, index) => {
-                  return content.provider === 'twitter' ? (
-                    <div key={index} className="space-y-3">
-                      <TwitterPreviewPost
-                        integration={integration}
-                        message={post}
-                        onSave={(newText) => handleSave(index, newText)}
-                        isViewOnly={false}
-                        media={index === 0 ? content.thumbnail_url : undefined}
-                      />
-                      <Separator />
-                    </div>
-                  ) : content.provider === 'linkedin' ? (
-                    <div key={index} className="space-y-3">
-                      <LinkedInPreviewPost
-                        integration={integration}
-                        message={post}
-                        onSave={(newText) => handleSave(index, newText)}
-                        isViewOnly={false}
-                        media={content.thumbnail_url}
-                      />
-                      <Separator />
-                    </div>
-                  ) : null;
-                })}
-              </div>
-            </ScrollArea>
-            <DialogFooter className="px-6">
-              <Button
-                className="w-full"
-                variant="secondary"
-                type="button"
-                disabled
-              >
-                Regenerate
-              </Button>
-              {content?.type !== 'long_form_tweet' ? (
-                <Button
-                  className="w-full"
-                  type="button"
-                  onClick={() => setStep(1)}
-                >
-                  Next
-                </Button>
+      <DialogContent
+        className="flex max-w-screen-2xl divide-x overflow-x-auto px-0"
+        closeButton={false}
+      >
+        {content?.content.map((postContent, postIndex) => (
+          <div className="h-full w-[450px]" key={postIndex}>
+            <DialogHeader className="px-6">
+              <Stepper
+                steps={['Prepare Content', 'Schedule & Post']}
+                currentStep={step[postIndex]?.step ?? 0}
+                variant="numbers"
+              />
+              <Separator />
+            </DialogHeader>
+            {step[postIndex]?.step === 0 && (
+              <>
+                <div className="mx-2 max-h-96 overflow-y-auto px-4 pt-2">
+                  <div className="flex flex-col gap-y-3">
+                    {postContent?.post_content.map((post, index) => {
+                      return content.provider === 'twitter' ? (
+                        <div key={index} className="space-y-3">
+                          <TwitterPreviewPost
+                            integration={integration}
+                            message={post}
+                            onSave={(newText) =>
+                              handleSave(postIndex, index, newText)
+                            }
+                            isViewOnly={false}
+                            media={
+                              index === 0 ? content.thumbnail_url : undefined
+                            }
+                          />
+                          <Separator />
+                        </div>
+                      ) : content.provider === 'linkedin' ? (
+                        <div key={index} className="space-y-3">
+                          <LinkedInPreviewPost
+                            integration={integration}
+                            message={post}
+                            onSave={(newText) =>
+                              handleSave(postIndex, index, newText)
+                            }
+                            isViewOnly={false}
+                            media={content.thumbnail_url}
+                          />
+                          <Separator />
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+                <DialogFooter className="px-6 pt-2">
+                  {content?.type !== 'long_form_tweet' ? (
+                    <Button
+                      className="w-full"
+                      type="button"
+                      onClick={() =>
+                        setStep((prev) =>
+                          prev.map((p, i) =>
+                            i === postIndex ? { ...p, step: p.step + 1 } : p,
+                          ),
+                        )
+                      }
+                    >
+                      Next
+                    </Button>
+                  ) : (
+                    <a
+                      className={buttonVariants({ className: 'w-full' })}
+                      href={`https://twitter.com/intent/tweet?text=${postContent.post_content.length > 0 && postContent.post_content[0]?.post_content ? encodeURIComponent(postContent.post_content[0].post_content) : ''}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Post
+                    </a>
+                  )}
+                </DialogFooter>
+              </>
+            )}
+            {step[postIndex]?.step === 1 &&
+              (step[postIndex]?.posted ? (
+                <Alert className="mx-8 my-24 w-fit">
+                  <CircleCheckBig className="h-4 w-4" />
+                  <AlertTitle>Congrats!</AlertTitle>
+                  <AlertDescription>
+                    Your content has been posted successfully!{' '}
+                    <a
+                      href={step[postIndex]?.postUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span className="underline">Click here</span> to check it
+                      out!
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              ) : step[postIndex]?.scheduled ? (
+                <Alert className="mx-8 my-24 w-fit">
+                  <CircleCheckBig className="h-4 w-4" />
+                  <AlertTitle>Congrats!</AlertTitle>
+                  <AlertDescription>
+                    Your content has been scheduled successfully!
+                  </AlertDescription>
+                </Alert>
               ) : (
-                <a
-                  className={buttonVariants({ className: 'w-full' })}
-                  href={`https://twitter.com/intent/tweet?text=${content.content.length > 0 && content.content[0]?.text ? encodeURIComponent(content.content[0].text) : ''}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Post
-                </a>
-              )}
-            </DialogFooter>
-          </>
-        )}
-        {step === 1 && (
-          <>
-            <div className="flex flex-col gap-3 px-6">
-              <Button
-                className="w-full"
-                type="button"
-                onClick={handlePost}
-                disabled={pending}
-              >
-                Post Now
-              </Button>
-              <div className="flex items-center">
-                <Separator className="flex-1" />
-                <span className="mx-2 text-sm">or</span>
-                <Separator className="flex-1" />
-              </div>
-              <ScheduleForm pending={pending} onSchedule={handleSchedule} />
-            </div>
-          </>
-        )}
+                <div className="flex flex-col gap-3 px-6 pt-5">
+                  <Button
+                    className="w-full"
+                    type="button"
+                    onClick={() => handlePost(postContent.id)}
+                    disabled={pending}
+                  >
+                    Post Now
+                  </Button>
+                  <div className="flex items-center">
+                    <Separator className="flex-1" />
+                    <span className="mx-2 text-sm">or</span>
+                    <Separator className="flex-1" />
+                  </div>
+                  <ScheduleForm
+                    pending={pending}
+                    onSchedule={(time) => handleSchedule(time, postContent.id)}
+                  />
+                </div>
+              ))}
+          </div>
+        ))}
       </DialogContent>
     </Dialog>
   );
