@@ -92,8 +92,6 @@ export default function PreviewDialog({
     (integration) => integration.id === formValues.account,
   );
 
-  console.log('CONTENT', content);
-
   const mutation = useMutation({
     mutationFn: () =>
       generateContent({
