@@ -8,7 +8,10 @@ import { enhanceRouteHandler } from '@kit/next/routes';
 import { getSupabaseRouteHandlerClient } from '@kit/supabase/route-handler-client';
 
 import { createContentService } from '~/lib/content/content.service';
-import { generatedContentSchema } from '~/lib/forms/types/generated-content.schema';
+import {
+  contentTypeSchema,
+  postContentSchema,
+} from '~/lib/forms/types/generated-content.schema';
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 
@@ -30,21 +33,26 @@ export const POST = enhanceRouteHandler(
 
     let postedUrl: string | undefined;
 
-    if (content.provider === 'twitter') {
+    if (
+      body.content_type === 'precta_tweet' ||
+      body.content_type === 'postcta_tweet' ||
+      body.content_type === 'thread_tweet' ||
+      body.content_type === 'long_form_tweet' ||
+      body.content_type === 'image_list'
+    ) {
       const data = await twitter.threadPost({
         integrationId: body.integration_id,
-        content: content.content,
+        content: content.post_content,
       });
       postedUrl = data.link;
     } else if (
-      content.provider === 'linkedin' &&
-      content.type === 'linkedin' &&
-      content.content.length > 0 &&
-      content.content[0]?.text
+      body.content_type === 'linkedin_long_form_post' &&
+      content.post_content.length > 0 &&
+      content.post_content[0]?.post_content
     ) {
       const data = await linkedin.singlePost({
         integrationId: body.integration_id,
-        content: content.content[0].text,
+        content: content.post_content[0].post_content,
       });
       postedUrl = data.link;
     }
@@ -66,8 +74,9 @@ export const POST = enhanceRouteHandler(
       id: z.string(),
       account_id: z.string(),
       integration_id: z.string(),
-      generated_content: generatedContentSchema,
-      edited_content: generatedContentSchema,
+      generated_content: postContentSchema,
+      edited_content: postContentSchema,
+      content_type: contentTypeSchema,
       scheduled: z.string(),
     }),
     auth: false,
