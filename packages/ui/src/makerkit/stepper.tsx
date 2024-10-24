@@ -96,7 +96,7 @@ function getClassNameBuilder() {
       },
       selected: {
         true: '',
-        false: 'hidden sm:flex',
+        false: '',
       },
       complete: {
         true: '',
@@ -182,7 +182,7 @@ function StepDivider({
   selected: boolean;
   complete: boolean;
 }>) {
-  const spanClassName = cn('font-medium text-sm min-w-max', {
+  const spanClassName = cn('font-medium text-sm min-w-max hidden sm:flex', {
     ['text-muted-foreground hidden sm:flex']: !selected,
     ['text-secondary-foreground']: selected || complete,
     ['font-medium']: selected,

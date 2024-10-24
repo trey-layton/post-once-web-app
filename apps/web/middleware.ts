@@ -13,7 +13,9 @@ const CSRF_SECRET_COOKIE = 'csrfSecret';
 const NEXT_ACTION_HEADER = 'next-action';
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|images|locales|assets|ingest/*|api/*).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|images|locales|assets|ingest/*|api/*).*)',
+  ],
 };
 
 const getUser = (request: NextRequest, response: NextResponse) => {
@@ -175,6 +177,14 @@ function getPatterns() {
           const redirectPath = `${signIn}?next=${next}`;
 
           return NextResponse.redirect(new URL(redirectPath, origin).href);
+        }
+
+        // verify if user has completed onboarding
+        const isOnboarded = user?.app_metadata.onboarded;
+
+        // If user is logged in but has not completed onboarding,
+        if (!isOnboarded) {
+          return NextResponse.redirect(new URL('/onboarding', origin).href);
         }
 
         const supabase = createMiddlewareClient(req, res);

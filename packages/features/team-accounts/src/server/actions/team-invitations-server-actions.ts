@@ -120,6 +120,14 @@ export const acceptInvitationAction = enhanceAction(
       throw new Error('Failed to accept invitation');
     }
 
+    // mark user as onboarded
+    await getSupabaseServerActionClient({
+      admin: true,
+    }).auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        onboarded: true,
+      },
+    });
     // Increase the seats for the account
     await perSeatBillingService.increaseSeats(accountId);
 
