@@ -1,16 +1,18 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createBillingGatewayService } from '@kit/billing-gateway';
 import { enhanceAction } from '@kit/next/actions';
 import { getLogger } from '@kit/shared/logger';
+import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
 import appConfig from '~/config/app.config';
 import billingConfig from '~/config/billing.config';
 import pathsConfig from '~/config/paths.config';
+import { createProfilesService } from '~/lib/profiles/profiles.service';
 import { OnboardingFormSchema } from '~/onboarding/_lib/onboarding-form.schema';
-import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
 export const submitOnboardingFormAction = enhanceAction(
   async (data, user) => {
@@ -34,7 +36,7 @@ export const submitOnboardingFormAction = enhanceAction(
     const createTeamResponse = await client
       .from('accounts')
       .insert({
-        name: data.team.name,
+        name: data.profile.teamName,
         primary_owner_user_id: user.id,
         is_personal_account: false,
       })
@@ -56,6 +58,18 @@ export const submitOnboardingFormAction = enhanceAction(
         `Team created. Creating onboarding data...`,
       );
     }
+
+    const service = createProfilesService(client);
+
+    await service.addBeehiivApiKey({
+      accountId: createTeamResponse.data.id,
+      apiKey: data.beehiivDetails.beehiivApiKey,
+      publicationId: data.beehiivDetails.publicationId,
+      subscribeUrl: data.beehiivDetails.subscribeUrl,
+    });
+
+    revalidatePath('/home/[account]', 'page');
+    revalidatePath('/home/[account]/settings', 'page');
 
     const response = await client.from('onboarding').upsert(
       {

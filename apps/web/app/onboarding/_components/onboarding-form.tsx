@@ -58,9 +58,12 @@ export function OnboardingForm() {
     defaultValues: {
       profile: {
         name: '',
+        teamName: '',
       },
-      team: {
-        name: '',
+      beehiivDetails: {
+        beehiivApiKey: '',
+        publicationId: '',
+        subscribeUrl: '',
       },
       checkout: {
         planId: '',
@@ -124,7 +127,7 @@ export function OnboardingForm() {
         </MultiStepFormStep>
 
         <MultiStepFormStep name={'team'}>
-          <TeamStep />
+          <BeehiivDetailsStep />
         </MultiStepFormStep>
 
         <MultiStepFormStep name={'checkout'}>
@@ -146,7 +149,7 @@ function ProfileStep() {
     <Form {...form}>
       <div className={'flex flex-col space-y-6'}>
         <div className={'flex flex-col space-y-2'}>
-          <h1 className={'text-xl font-semibold'}>Welcome to Makerkit</h1>
+          <h1 className={'text-xl font-semibold'}>Welcome to PostOnce</h1>
 
           <p className={'text-sm text-muted-foreground'}>
             Welcome to the onboarding process! Let&apos;s get started by
@@ -170,6 +173,22 @@ function ProfileStep() {
           }}
           name={'profile.name'}
         />
+        <FormField
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Team Name</FormLabel>
+
+                <FormControl>
+                  <Input {...field} placeholder={'New Team'} />
+                </FormControl>
+
+                <FormDescription>Enter the name of your team</FormDescription>
+              </FormItem>
+            );
+          }}
+          name={'profile.teamName'}
+        />
 
         <div className={'flex justify-end'}>
           <Button onClick={nextStep}>Continue</Button>
@@ -179,17 +198,19 @@ function ProfileStep() {
   );
 }
 
-function TeamStep() {
+function BeehiivDetailsStep() {
   const { nextStep, prevStep, form } = useMultiStepFormContext();
 
   return (
     <Form {...form}>
       <div className={'flex flex-col space-y-6'}>
         <div className={'flex flex-col space-y-2'}>
-          <h1 className={'text-xl font-semibold'}>Create Your Team</h1>
+          <h1 className={'text-xl font-semibold'}>
+            Let's get your newsletter connected
+          </h1>
 
           <p className={'text-sm text-muted-foreground'}>
-            Let&apos;s create your team. Enter your team name below.
+            Enter your beehiiv API key to connect your newsletter.
           </p>
         </div>
 
@@ -197,20 +218,78 @@ function TeamStep() {
           render={({ field }) => {
             return (
               <FormItem>
-                <FormLabel>Your Team Name</FormLabel>
+                <FormLabel>beehiiv API Key</FormLabel>
 
                 <FormControl>
-                  <Input {...field} placeholder={'Name'} />
+                  <Input {...field} placeholder={'Enter your API key'} />
                 </FormControl>
-
-                <FormDescription>
-                  This is the name of your team.
-                </FormDescription>
               </FormItem>
             );
           }}
-          name={'team.name'}
+          name={'beehiivDetails.beehiivApiKey'}
         />
+
+        <FormField
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Publication ID</FormLabel>
+
+                <FormControl>
+                  <Input {...field} placeholder={'Enter your publication ID'} />
+                </FormControl>
+              </FormItem>
+            );
+          }}
+          name={'beehiivDetails.publicationId'}
+        />
+
+        <FormField
+          render={({ field }) => {
+            return (
+              <FormItem>
+                <FormLabel>Subscribe URL</FormLabel>
+
+                <FormControl>
+                  <Input {...field} placeholder={'Enter your subscribe URL'} />
+                </FormControl>
+              </FormItem>
+            );
+          }}
+          name={'beehiivDetails.subscribeUrl'}
+        />
+
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">How to do this</h3>
+          <ol className="space-y-2 text-muted-foreground">
+            <li>
+              <span className="font-medium">
+                1. Navigate to Settings from your beehiiv Dashboard,
+              </span>
+            </li>
+            <li>
+              <span className="font-medium">
+                2. Click Integrations on the left hand navigation menu,
+              </span>
+            </li>
+            <li>
+              <span className="font-medium">
+                3. Scroll down and select 'New API Key',
+              </span>
+            </li>
+            <li>
+              <span className="font-medium">
+                4. Give it a name like 'PostOnce API Key' and click Create New
+                Key,
+              </span>
+            </li>
+            <li>
+              <span className="font-medium">
+                5. Copy this key and paste it in the field above.
+              </span>
+            </li>
+          </ol>
+        </div>
 
         <div className={'flex justify-end space-x-2'}>
           <Button variant={'ghost'} onClick={prevStep}>
