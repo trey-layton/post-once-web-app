@@ -15,4 +15,10 @@ export const CreateBillingCheckoutSchema = z.object({
       quantity: z.number(),
     }),
   ),
+  metadata: z
+    .object({
+      source: z.string(),
+      userId: z.string().uuid(),
+    })
+    .optional(),
 });

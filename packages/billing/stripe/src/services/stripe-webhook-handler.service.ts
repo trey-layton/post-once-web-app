@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { BillingConfig, BillingWebhookHandlerService } from '@kit/billing';
 import { getLogger } from '@kit/shared/logger';
 import { Database } from '@kit/supabase/database';
+import { getSupabaseRouteHandlerClient } from '@kit/supabase/route-handler-client';
 
 import { StripeServerEnvSchema } from '../schema/stripe-server-env.schema';
 import { createStripeClient } from './stripe-sdk';
@@ -188,6 +189,24 @@ export class StripeWebhookHandlerService
           trialEndsAt: subscription.trial_end,
         });
 
+      const subscriptionData =
+        await stripe.subscriptions.retrieve(subscriptionId);
+
+      const metadata = subscriptionData.metadata as
+        | {
+            source: string;
+            userId: string;
+          }
+        | undefined;
+
+      // if the checkout comes from onboarding
+      // we need to complete the onboarding process
+      if (metadata?.source === 'onboarding') {
+        const userId = metadata.userId;
+
+        await completeOnboarding(userId);
+      }
+
       return onCheckoutCompletedCallback(payload);
     } else {
       // if it's a one-time payment, we need to retrieve the session
@@ -333,5 +352,126 @@ export class StripeWebhookHandlerService
     }
 
     return this.stripe;
+  }
+}
+
+async function completeOnboarding(accountId: string) {
+  const logger = await getLogger();
+  const adminClient = getSupabaseRouteHandlerClient({ admin: true });
+
+  logger.info(
+    { accountId },
+    `Checkout comes from onboarding. Processing onboarding data...`,
+  );
+
+  const onboarding = await adminClient
+    .from('onboarding')
+    .select('*')
+    .eq('account_id', accountId)
+    .single();
+
+  if (onboarding.error) {
+    logger.error(
+      { error: onboarding.error, accountId },
+      `Failed to retrieve onboarding data`,
+    );
+
+    // if there's an error, we can't continue
+    return;
+  } else {
+    logger.info({ accountId }, `Onboarding data retrieved. Processing...`);
+
+    const data = onboarding.data.data as {
+      userName: string;
+      teamAccountId: string;
+    };
+
+    const teamAccountId = data.teamAccountId;
+
+    logger.info(
+      { userId: accountId, teamAccountId },
+      `Assigning membership...`,
+    );
+
+    const assignMembershipResponse = await adminClient
+      .from('accounts_memberships')
+      .insert({
+        account_id: teamAccountId,
+        user_id: accountId,
+        account_role: 'owner',
+      });
+
+    if (assignMembershipResponse.error) {
+      logger.error(
+        {
+          error: assignMembershipResponse.error,
+        },
+        `Failed to assign membership`,
+      );
+    } else {
+      logger.info({ accountId }, `Membership assigned. Updating account...`);
+    }
+
+    const accountResponse = await adminClient
+      .from('accounts')
+      .update({
+        name: data.userName,
+      })
+      .eq('id', accountId);
+
+    if (accountResponse.error) {
+      logger.error(
+        {
+          error: accountResponse.error,
+        },
+        `Failed to update account`,
+      );
+    } else {
+      logger.info(
+        { accountId },
+        `Account updated. Cleaning up onboarding data...`,
+      );
+    }
+
+    // set onboarded flag on user account
+    const updateUserResponse = await adminClient.auth.admin.updateUserById(
+      accountId,
+      {
+        app_metadata: {
+          onboarded: true,
+        },
+      },
+    );
+
+    if (updateUserResponse.error) {
+      logger.error(
+        {
+          error: updateUserResponse.error,
+        },
+        `Failed to update user`,
+      );
+    } else {
+      logger.info({ accountId }, `User updated. Cleaning up...`);
+    }
+
+    // clean up onboarding data
+    const deleteOnboardingResponse = await adminClient
+      .from('onboarding')
+      .delete()
+      .eq('account_id', accountId);
+
+    if (deleteOnboardingResponse.error) {
+      logger.error(
+        {
+          error: deleteOnboardingResponse.error,
+        },
+        `Failed to delete onboarding data`,
+      );
+    } else {
+      logger.info(
+        { accountId },
+        `Onboarding data cleaned up. Completed webhook handler.`,
+      );
+    }
   }
 }

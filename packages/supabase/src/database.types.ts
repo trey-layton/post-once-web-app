@@ -568,6 +568,55 @@ export type Database = {
           },
         ]
       }
+      onboarding: {
+        Row: {
+          account_id: string
+          completed: boolean | null
+          created_at: string | null
+          data: Json | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          completed?: boolean | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          completed?: boolean | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_account_workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
