@@ -10,17 +10,20 @@ import { enhanceAction } from '@kit/next/actions';
 import { getSupabaseServerActionClient } from '@kit/supabase/server-actions-client';
 
 import { createContentService } from '~/lib/content/content.service';
-import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import {
   contentProviderSchema,
   contentTypeSchema,
   generatedContentSchema,
   postContentSchema,
 } from '~/lib/forms/types/generated-content.schema';
+import { baseContentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 import { createIntegrationsService } from '~/lib/integrations/integrations.service';
 import { createLinkedInService } from '~/lib/integrations/linkedin.service';
 import { createTwitterService } from '~/lib/integrations/twitter.service';
 import { createProfilesService } from '~/lib/profiles/profiles.service';
+
+import { Readable } from 'stream';
+import { ReadableStreamDefaultReader } from 'stream/web';
 
 export const addBeehiivApiKey = enhanceAction(
   async (data) => {
@@ -42,114 +45,157 @@ export const addBeehiivApiKey = enhanceAction(
   },
 );
 
-export const generateContent = enhanceAction(
-  async ({ beehiivArticleId, contentType, accountId, integrationId }) => {
-    const client = getSupabaseServerActionClient();
-    const service = createContentService(client);
+const actionSchema = baseContentHubFormSchema
+  .extend({
+    accountId: z.string(),
+    integrationId: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.beehiivArticleId && !data.pastedContent) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Either Beehiiv Article or Pasted Content is required',
+        path: ['beehiivArticleId'],
+      });
+    }
+    if (data.beehiivArticleId && data.pastedContent) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Cannot provide both Beehiiv Article and Pasted Content',
+        path: ['beehiivArticleId'],
+      });
+    }
+  });
 
-    const {
-      data: { session },
-    } = await client.auth.getSession();
-
-    const response = await fetch(`${process.env.API_URL}/generate_content`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({
+  export const generateContent = enhanceAction(
+    async ({
+      beehiivArticleId,
+      pastedContent,
+      contentType,
+      accountId,
+      integrationId,
+    }) => {
+      const client = getSupabaseServerActionClient();
+      const service = createContentService(client);
+  
+      const {
+        data: { session },
+      } = await client.auth.getSession();
+  
+      const requestBody: any = {
         account_id: accountId,
-        post_id: beehiivArticleId,
         content_type: contentType,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`generate_content error: ${response.statusText}`);
-    }
-
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-
-    if (!reader) {
-      throw new Error('Unable to read stream');
-    }
-
-    let accumulatedChunks = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      accumulatedChunks += chunk;
-    }
-
-    const jsonObjects = accumulatedChunks.split('\n').filter(Boolean);
-
-    let finalResult;
-    try {
-      const lastJsonObject = jsonObjects[jsonObjects.length - 1];
-      if (lastJsonObject === undefined) {
-        throw new Error('No valid JSON objects found in the response');
-      }
-      finalResult = JSON.parse(lastJsonObject);
-    } catch (error) {
-      console.error('Error parsing final chunk:', error);
-      throw new Error(`Failed to parse the generated content: ${error}`);
-    }
-
-    console.warn('Final result:', JSON.stringify(finalResult, null, 2));
-
-    if (finalResult.status === 'completed' && finalResult.result) {
-      let generatedContent;
-
-      const parsedResult = generatedContentSchema.safeParse(finalResult.result);
-
-      if (!parsedResult.success) {
-        console.error('ZodError:', parsedResult.error.errors);
-        console.error('Invalid input:', finalResult.result);
-
-        throw new Error(
-          `Validation failed. Error details: ${JSON.stringify(parsedResult.error.errors, null, 2)}. Invalid object: ${JSON.stringify(finalResult.result, null, 2)}`,
-        );
-      } else {
-        generatedContent = parsedResult.data;
-      }
-
-      generatedContent.content = await Promise.all(
-        generatedContent.content.map(async (content) => {
-          const { id } = await service.addContent({
-            accountId,
-            integrationId,
-            status: 'generated',
-            generatedContent: content,
-            contentType,
-          });
-
-          return {
-            ...content,
-            id,
-          };
-        }),
-      );
-
-      return {
-        ...generatedContent,
-        content: await Promise.all(
-          generatedContent.content.map(getLinkMetaData),
-        ),
       };
-    } else {
+  
+      if (pastedContent && !beehiivArticleId) {
+        requestBody.content = pastedContent;
+      } else if (beehiivArticleId && !pastedContent) {
+        requestBody.post_id = beehiivArticleId;
+      } else {
+        throw new Error(
+          'Exactly one of beehiivArticleId or pastedContent must be provided'
+        );
+      }
+  
+      console.log('Request Body:', JSON.stringify(requestBody));
+  
+      const response = await fetch(`${process.env.API_URL}/generate_content`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `generate_content error: ${response.statusText}: ${errorText}`
+        );
+      }
+  
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+  
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = '';
+      let done = false;
+  
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+  
+        if (value) {
+          const chunk = decoder.decode(value);
+          result += chunk;
+  
+          let lines = result.split('\n');
+          result = lines.pop() || '';
+  
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const parsedMessage = JSON.parse(line);
+                if (
+                  parsedMessage.status === 'completed' &&
+                  parsedMessage.result
+                ) {
+                  const parsedResult = generatedContentSchema.safeParse(
+                    parsedMessage.result
+                  );
+  
+                  if (!parsedResult.success) {
+                    throw new Error(
+                      `Validation failed: ${JSON.stringify(
+                        parsedResult.error.errors
+                      )}`
+                    );
+                  }
+  
+                  const generatedContent = parsedResult.data;
+                  generatedContent.content = await Promise.all(
+                    generatedContent.content.map(async (contentItem) => {
+                      const { id } = await service.addContent({
+                        accountId,
+                        integrationId,
+                        status: 'generated',
+                        generatedContent: contentItem,
+                        contentType,
+                      });
+  
+                      return {
+                        ...contentItem,
+                        id,
+                      };
+                    })
+                  );
+  
+                  return generatedContent;
+                } else if (parsedMessage.status === 'failed') {
+                  throw new Error(
+                    `Content generation failed: ${parsedMessage.error}`
+                  );
+                }
+                // Handle other statuses or progress updates if needed
+              } catch (e) {
+                console.error('Error parsing message:', e);
+                // Handle parsing errors here
+              }
+            }
+          }
+        }
+      }
+  
       throw new Error('Content generation did not complete successfully');
+    },
+    {
+      schema: actionSchema,
     }
-  },
-  {
-    schema: contentHubFormSchema.extend({
-      accountId: z.string(),
-      integrationId: z.string(),
-    }),
-  },
-);
+  );
+  
 
 async function getLinkMetaData(
   content: z.infer<typeof generatedContentSchema>['content'][number],

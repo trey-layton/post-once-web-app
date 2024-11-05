@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LinkedInLogoIcon } from '@radix-ui/react-icons';
 import { LoaderCircle, NotebookPen } from 'lucide-react';
@@ -27,14 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@kit/ui/select';
+import { Textarea } from '@kit/ui/textarea';
 
 import { contentHubFormSchema } from '~/lib/forms/types/content-hub-form.schema';
 
 import PreviewDialog from './preview/preview-dialog';
+import PasteArticleDialog from './paste-article-dialog';
 import ThreadsLogoIcon from './threads-logo-icon';
 import XLogoIcon from './x-logo-icon';
-
-//!disable contentTypes if matching integrations are not available
 
 const contentTypes: {
   name: z.infer<typeof contentHubFormSchema>['contentType'];
@@ -64,9 +63,12 @@ export default function ContentHubForm({
   posts: { id: string; title: string }[];
 }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [pastedContent, setPastedContent] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof contentHubFormSchema>>({
     resolver: zodResolver(contentHubFormSchema),
+    mode: 'onBlur',
   });
 
   const filteredIntegrations = integrations.filter(
@@ -76,8 +78,24 @@ export default function ContentHubForm({
         ?.provider,
   );
 
-  function onSubmit(values: z.infer<typeof contentHubFormSchema>) {
-    setIsSubmitted(true);
+  function onArticleSubmit(content: string) {
+    form.setValue('pastedContent', content);
+    form.setValue('beehiivArticleId', undefined); // Ensure this is undefined
+    setPastedContent(content);
+  }
+  
+
+  async function onSubmit(values: z.infer<typeof contentHubFormSchema>) {
+    try {
+      setIsSubmitted(true);
+      // Perform any async operations here
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating an async operation
+      console.log('Form submitted:', values);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitted(false);
+    }
   }
 
   return (
@@ -89,30 +107,55 @@ export default function ContentHubForm({
             name="beehiivArticleId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Beehiiv Article</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <div className="flex items-center justify-between">
+                  <FormLabel>Beehiiv Article</FormLabel>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => setIsDialogOpen(true)}
+                  >
+                    {pastedContent ? 'Edit Content' : 'Paste Instead'}
+                  </Button>
+                </div>
+                {pastedContent ? (
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Article" />
-                    </SelectTrigger>
+                    <Textarea
+                      value={pastedContent}
+                      readOnly
+                      onClick={() => setIsDialogOpen(true)}
+                      className="min-h-[100px] resize-none cursor-pointer"
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectGroup>
-                      {posts.length > 0 ? (
-                        posts.map((post, index) => (
-                          <SelectItem key={index} value={post.id}>
-                            {post.title}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectLabel>No articles available</SelectLabel>
-                      )}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                ) : (
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      form.setValue('pastedContent', undefined);
+                      setPastedContent('');
+                    }}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an article" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectGroup>
+                        {posts.length > 0 ? (
+                          posts.map((post, index) => (
+                            <SelectItem key={index} value={post.id}>
+                              {post.title}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectLabel>No articles available</SelectLabel>
+                        )}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -202,20 +245,16 @@ export default function ContentHubForm({
             size="lg"
             disabled={isSubmitted}
           >
-            {isSubmitted ? (
-              <>
-                <span>Generating</span>
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              </>
-            ) : (
-              <>
-                <span>Generate</span>
-                <NotebookPen className="h-4 w-4" />
-              </>
-            )}
+            {isSubmitted ? 'Generating' : 'Generate'}
           </Button>
         </form>
       </Form>
+      <PasteArticleDialog
+        onArticleSubmit={onArticleSubmit}
+        initialContent={pastedContent}
+        open={isDialogOpen}
+        setOpen={setIsDialogOpen}
+      />
       <PreviewDialog
         isSubmitted={isSubmitted}
         setIsSubmitted={setIsSubmitted}
