@@ -34,7 +34,7 @@ function Home() {
         title={
           <div className="px-2">
             <span>Transform your Newsletter</span>
-            <span>into Social Media Content</span>
+            <span> into Social Media Content</span>
           </div>
         }
         subtitle={
