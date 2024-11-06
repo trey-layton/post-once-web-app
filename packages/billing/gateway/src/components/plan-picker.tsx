@@ -115,7 +115,14 @@ export function PlanPicker(
       >
         <form
           className={'flex w-full max-w-xl flex-col space-y-4'}
-          onSubmit={form.handleSubmit(props.onSubmit)}
+          onSubmit={form.handleSubmit((data) => {
+            console.log('[Payment Debug] Form submission triggered', {
+              data,
+              timestamp: new Date().toISOString(),
+              isFormValid: form.formState.isValid
+            });
+            props.onSubmit(data);
+          })}
         >
           <If condition={intervals.length}>
             <div
@@ -357,10 +364,18 @@ export function PlanPicker(
           />
 
           <div>
-            <Button
-              data-test="checkout-submit-button"
-              disabled={props.pending ?? !form.formState.isValid}
-            >
+          <Button
+            type="submit"
+            data-test="checkout-submit-button"
+            disabled={props.pending ?? !form.formState.isValid}
+            onClick={() => {
+              console.log('[Payment Debug] Submit button clicked', {
+                isPending: props.pending,
+                isFormValid: form.formState.isValid,
+                formValues: form.getValues()
+              });
+            }}
+          >
               {props.pending ? (
                 t('redirectingToPayment')
               ) : (

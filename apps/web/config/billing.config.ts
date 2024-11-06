@@ -23,8 +23,8 @@ export default createBillingSchema({
           lineItems: [
             {
               // Use your actual Stripe Price ID here
-              id: 'price_YOUR_ACTUAL_PRICE_ID',
-              name: 'Base Price',
+              id: 'price_1QCqNqDFhW4fdaSjcUNlEdPp',
+              name: 'Standard Tier',
               cost: 14.99,
               type: 'flat' as const,
             },

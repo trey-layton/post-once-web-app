@@ -85,6 +85,7 @@ export function PersonalAccountCheckoutForm(props: {
             config={billingConfig}
             canStartTrial={canStartTrial}
             onSubmit={({ planId, productId }) => {
+              console.log('Selected Plan:', planId, 'Product:', productId);
               startTransition(async () => {
                 try {
                   appEvents.emit({

@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from 'react';
 
+import { Alert, AlertDescription, AlertTitle } from '@kit/ui/alert';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 
@@ -40,6 +43,7 @@ export function TeamAccountCheckoutForm(params: {
   const routeParams = useParams();
   const [pending, startTransition] = useTransition();
   const appEvents = useAppEvents();
+  const [error, setError] = useState<string | null>(null);
 
   const [checkoutToken, setCheckoutToken] = useState<string | undefined>(
     undefined,
@@ -61,46 +65,64 @@ export function TeamAccountCheckoutForm(params: {
 
   // Otherwise, render the plan picker component
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <Trans i18nKey={'billing:manageTeamPlan'} />
-        </CardTitle>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <Trans i18nKey={'billing:manageTeamPlan'} />
+          </CardTitle>
 
-        <CardDescription>
-          <Trans i18nKey={'billing:manageTeamPlanDescription'} />
-        </CardDescription>
-      </CardHeader>
+          <CardDescription>
+            <Trans i18nKey={'billing:manageTeamPlanDescription'} />
+          </CardDescription>
+        </CardHeader>
 
-      <CardContent>
-        <PlanPicker
-          pending={pending}
-          config={billingConfig}
-          canStartTrial={canStartTrial}
-          onSubmit={({ planId, productId }) => {
-            startTransition(async () => {
-              const slug = routeParams.account as string;
+        <CardContent>
+          {error && (
+            <Alert variant="destructive">
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <PlanPicker
+            pending={pending}
+            config={billingConfig}
+            canStartTrial={canStartTrial}
+            onSubmit={({ planId, productId }) => {
+              console.log('Selected Plan:', planId, 'Product:', productId);
+              console.log('TeamAccountCheckoutForm onSubmit called with planId:', planId, 'productId:', productId);
+              startTransition(async () => {
+                try {
+                  const slug = routeParams.account as string;
 
-              appEvents.emit({
-                type: 'checkout.started',
-                payload: {
-                  planId,
-                  account: slug,
-                },
+                  appEvents.emit({
+                    type: 'checkout.started',
+                    payload: {
+                      planId,
+                      account: slug,
+                    },
+                  });
+
+                  const { checkoutToken } =
+                    await createTeamAccountCheckoutSession({
+                      planId,
+                      productId,
+                      slug,
+                      accountId: params.accountId,
+                    });
+
+                  setCheckoutToken(checkoutToken);
+                  setError(null); // Clear any previous errors
+                } catch (e: any) {
+                  console.error('Error creating checkout session:', error);
+                  setError('Failed to create checkout session. Please try again.');
+                }
               });
-
-              const { checkoutToken } = await createTeamAccountCheckoutSession({
-                planId,
-                productId,
-                slug,
-                accountId: params.accountId,
-              });
-
-              setCheckoutToken(checkoutToken);
-            });
-          }}
-        />
-      </CardContent>
-    </Card>
+            }}
+          />
+        </CardContent>
+      </Card>
+    </>
   );
 }
