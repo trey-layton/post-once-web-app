@@ -28,12 +28,14 @@ import { TermsAndConditionsFormField } from './terms-and-conditions-form-field';
 
 export function MagicLinkAuthContainer({
   inviteToken,
+  referralCode,
   redirectUrl,
   shouldCreateUser,
   defaultValues,
   displayTermsCheckbox,
 }: {
   inviteToken?: string;
+  referralCode?: string;
   redirectUrl: string;
   shouldCreateUser: boolean;
   displayTermsCheckbox?: boolean;
@@ -63,6 +65,9 @@ export function MagicLinkAuthContainer({
 
     if (inviteToken) {
       url.searchParams.set('invite_token', inviteToken);
+    }
+    if (referralCode) {
+      url.searchParams.set('referralCode', referralCode);
     }
 
     const emailRedirectTo = url.href;

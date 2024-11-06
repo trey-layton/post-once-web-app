@@ -14,6 +14,7 @@ import { AuthProviderButton } from './auth-provider-button';
 
 export function OauthProviders(props: {
   inviteToken?: string;
+  referralCode?: string;  // Add this line
   shouldCreateUser: boolean;
   enabledProviders: Provider[];
 
@@ -67,6 +68,9 @@ export function OauthProviders(props: {
 
                   if (props.inviteToken) {
                     queryParams.set('invite_token', props.inviteToken);
+                  }
+                  if (props.referralCode) {
+                    queryParams.set('referralCode', props.referralCode);
                   }
 
                   const redirectPath = [

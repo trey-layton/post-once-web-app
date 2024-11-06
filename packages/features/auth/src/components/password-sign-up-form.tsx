@@ -27,12 +27,14 @@ export function PasswordSignUpForm({
   displayTermsCheckbox,
   onSubmit,
   loading,
+  referralCode
 }: {
   defaultValues?: {
     email: string;
   };
 
   displayTermsCheckbox?: boolean;
+  referralCode?: string; // Add this
 
   onSubmit: (params: {
     email: string;
@@ -49,6 +51,7 @@ export function PasswordSignUpForm({
       email: defaultValues?.email ?? '',
       password: '',
       repeatPassword: '',
+      referralCode: referralCode || '', // Include in default values
     },
   });
 
@@ -58,6 +61,7 @@ export function PasswordSignUpForm({
         className={'w-full space-y-2.5'}
         onSubmit={form.handleSubmit(onSubmit)}
       >
+        <input type="hidden" {...form.register('referralCode')} />
         <FormField
           control={form.control}
           name={'email'}

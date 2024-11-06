@@ -34,6 +34,7 @@
   "prettier": "@kit/prettier-config",
   "dependencies": {
     "@manypkg/cli": "^0.21.4",
+    "@supabase/supabase-js": "^2.45.4",
     "@turbo/gen": "^2.0.9",
     "cross-env": "^7.0.3",
     "pnpm": "^9.6.0",

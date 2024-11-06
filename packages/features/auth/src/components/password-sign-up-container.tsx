@@ -16,6 +16,7 @@ import { PasswordSignUpForm } from './password-sign-up-form';
 
 interface EmailPasswordSignUpContainerProps {
   displayTermsCheckbox?: boolean;
+  referralCode?: string;  // Add this line
   defaultValues?: {
     email: string;
   };
@@ -29,6 +30,7 @@ export function EmailPasswordSignUpContainer({
   onSignUp,
   emailRedirectTo,
   displayTermsCheckbox,
+  referralCode, // Add this line
 }: EmailPasswordSignUpContainerProps) {
   const { captchaToken, resetCaptchaToken } = useCaptchaToken();
 
@@ -40,7 +42,8 @@ export function EmailPasswordSignUpContainer({
   const loading = signUpMutation.isPending || redirecting.current;
 
   const onSignupRequested = useCallback(
-    async (credentials: { email: string; password: string }) => {
+    async (credentials: { email: string; password: string; referralCode?: string }) => {
+      const { referralCode } = credentials;
       if (loading) {
         return;
       }
@@ -50,6 +53,7 @@ export function EmailPasswordSignUpContainer({
           ...credentials,
           emailRedirectTo,
           captchaToken,
+          referralCode
         });
 
         appEvents.emit({
@@ -95,6 +99,7 @@ export function EmailPasswordSignUpContainer({
           loading={loading}
           defaultValues={defaultValues}
           displayTermsCheckbox={displayTermsCheckbox}
+          referralCode={referralCode} // Add this line
         />
       </If>
     </>

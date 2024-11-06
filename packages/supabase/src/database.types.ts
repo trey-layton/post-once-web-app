@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       account_profiles: {
@@ -39,6 +14,8 @@ export type Database = {
           account_id: string
           beehiiv_api_key: string | null
           created_at: string
+          custom_prompt: string | null
+          example_linkedin: string | null
           example_tweet: string | null
           publication_id: string | null
           subscribe_url: string | null
@@ -48,6 +25,8 @@ export type Database = {
           account_id: string
           beehiiv_api_key?: string | null
           created_at?: string
+          custom_prompt?: string | null
+          example_linkedin?: string | null
           example_tweet?: string | null
           publication_id?: string | null
           subscribe_url?: string | null
@@ -57,6 +36,8 @@ export type Database = {
           account_id?: string
           beehiiv_api_key?: string | null
           created_at?: string
+          custom_prompt?: string | null
+          example_linkedin?: string | null
           example_tweet?: string | null
           publication_id?: string | null
           subscribe_url?: string | null
@@ -69,6 +50,13 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
           },
           {
             foreignKeyName: "account_profiles_account_id_fkey"
@@ -88,7 +76,7 @@ export type Database = {
       }
       accounts: {
         Row: {
-          created_at: string | null
+          created_at: string
           created_by: string | null
           email: string | null
           id: string
@@ -102,7 +90,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
@@ -116,7 +104,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           created_by?: string | null
           email?: string | null
           id?: string
@@ -129,29 +117,7 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "accounts_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_primary_owner_user_id_fkey"
-            columns: ["primary_owner_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       accounts_memberships: {
         Row: {
@@ -193,6 +159,13 @@ export type Database = {
             foreignKeyName: "accounts_memberships_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "accounts_memberships_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -209,27 +182,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["name"]
-          },
-          {
-            foreignKeyName: "accounts_memberships_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_memberships_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_memberships_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -262,6 +214,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_customers_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
           },
           {
             foreignKeyName: "billing_customers_account_id_fkey"
@@ -355,6 +314,13 @@ export type Database = {
             foreignKeyName: "content_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "content_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -426,6 +392,13 @@ export type Database = {
             foreignKeyName: "integrations_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "integrations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -484,6 +457,13 @@ export type Database = {
             foreignKeyName: "invitations_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "invitations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -492,13 +472,6 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "user_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
@@ -556,6 +529,13 @@ export type Database = {
             foreignKeyName: "notifications_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "notifications_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -568,43 +548,58 @@ export type Database = {
           },
         ]
       }
-      order_items: {
+      onboarding: {
         Row: {
-          created_at: string
+          account_id: string
+          completed: boolean | null
+          created_at: string | null
+          data: Json | null
           id: string
-          order_id: string
-          price_amount: number | null
-          product_id: string
-          quantity: number
-          updated_at: string
-          variant_id: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          id: string
-          order_id: string
-          price_amount?: number | null
-          product_id: string
-          quantity?: number
-          updated_at?: string
-          variant_id: string
+          account_id: string
+          completed?: boolean | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          account_id?: string
+          completed?: boolean | null
+          created_at?: string | null
+          data?: Json | null
           id?: string
-          order_id?: string
-          price_amount?: number | null
-          product_id?: string
-          quantity?: number
-          updated_at?: string
-          variant_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_account_workspace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "user_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -655,6 +650,13 @@ export type Database = {
             foreignKeyName: "orders_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "orders_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -673,6 +675,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          id: number
+          referral_code: string
+          referred_user_id: string
+          signup_date: string
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          id?: number
+          referral_code: string
+          referred_user_id: string
+          signup_date?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          id?: number
+          referral_code?: string
+          referred_user_id?: string
+          signup_date?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -826,6 +855,13 @@ export type Database = {
             foreignKeyName: "subscriptions_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
+            referencedRelation: "customer_success_dashboard"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
             referencedRelation: "user_account_workspace"
             referencedColumns: ["id"]
           },
@@ -892,6 +928,20 @@ export type Database = {
       }
     }
     Views: {
+      customer_success_dashboard: {
+        Row: {
+          account_email: string | null
+          account_id: string | null
+          account_name: string | null
+          content_statuses: string | null
+          last_content_created: string | null
+          last_login: string | null
+          publication_id: string | null
+          subscribe_url: string | null
+          total_content_created: number | null
+        }
+        Relationships: []
+      }
       user_account_workspace: {
         Row: {
           id: string | null
@@ -967,7 +1017,7 @@ export type Database = {
           account_name: string
         }
         Returns: {
-          created_at: string | null
+          created_at: string
           created_by: string | null
           email: string | null
           id: string
@@ -1188,7 +1238,7 @@ export type Database = {
         | "content.update"
         | "content.delete"
       billing_provider: "stripe" | "lemon-squeezy" | "paddle"
-      content_status: "scheduled" | "posted" | "generated"
+      content_status: "scheduled" | "posted" | "generated" | "posting"
       integration_provider: "linkedin" | "twitter" | "threads"
       notification_channel: "in_app" | "email"
       notification_type: "info" | "warning" | "error"
@@ -1210,315 +1260,6 @@ export type Database = {
         email: string | null
         role: string | null
       }
-    }
-  }
-  storage: {
-    Tables: {
-      buckets: {
-        Row: {
-          allowed_mime_types: string[] | null
-          avif_autodetection: boolean | null
-          created_at: string | null
-          file_size_limit: number | null
-          id: string
-          name: string
-          owner: string | null
-          owner_id: string | null
-          public: boolean | null
-          updated_at: string | null
-        }
-        Insert: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id: string
-          name: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          updated_at?: string | null
-        }
-        Update: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id?: string
-          name?: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      migrations: {
-        Row: {
-          executed_at: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Insert: {
-          executed_at?: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Update: {
-          executed_at?: string | null
-          hash?: string
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      objects: {
-        Row: {
-          bucket_id: string | null
-          created_at: string | null
-          id: string
-          last_accessed_at: string | null
-          metadata: Json | null
-          name: string | null
-          owner: string | null
-          owner_id: string | null
-          path_tokens: string[] | null
-          updated_at: string | null
-          version: string | null
-        }
-        Insert: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          version?: string | null
-        }
-        Update: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          version?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "objects_bucketId_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          in_progress_size: number
-          key: string
-          owner_id: string | null
-          upload_signature: string
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          id: string
-          in_progress_size?: number
-          key: string
-          owner_id?: string | null
-          upload_signature: string
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          in_progress_size?: number
-          key?: string
-          owner_id?: string | null
-          upload_signature?: string
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads_parts: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          etag: string
-          id: string
-          key: string
-          owner_id: string | null
-          part_number: number
-          size: number
-          upload_id: string
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          etag: string
-          id?: string
-          key: string
-          owner_id?: string | null
-          part_number: number
-          size?: number
-          upload_id: string
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          etag?: string
-          id?: string
-          key?: string
-          owner_id?: string | null
-          part_number?: number
-          size?: number
-          upload_id?: string
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
-            columns: ["upload_id"]
-            isOneToOne: false
-            referencedRelation: "s3_multipart_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      can_insert_object: {
-        Args: {
-          bucketid: string
-          name: string
-          owner: string
-          metadata: Json
-        }
-        Returns: undefined
-      }
-      extension: {
-        Args: {
-          name: string
-        }
-        Returns: string
-      }
-      filename: {
-        Args: {
-          name: string
-        }
-        Returns: string
-      }
-      foldername: {
-        Args: {
-          name: string
-        }
-        Returns: string[]
-      }
-      get_size_by_bucket: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          size: number
-          bucket_id: string
-        }[]
-      }
-      list_multipart_uploads_with_delimiter: {
-        Args: {
-          bucket_id: string
-          prefix_param: string
-          delimiter_param: string
-          max_keys?: number
-          next_key_token?: string
-          next_upload_token?: string
-        }
-        Returns: {
-          key: string
-          id: string
-          created_at: string
-        }[]
-      }
-      list_objects_with_delimiter: {
-        Args: {
-          bucket_id: string
-          prefix_param: string
-          delimiter_param: string
-          max_keys?: number
-          start_after?: string
-          next_token?: string
-        }
-        Returns: {
-          name: string
-          id: string
-          metadata: Json
-          updated_at: string
-        }[]
-      }
-      operation: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      search: {
-        Args: {
-          prefix: string
-          bucketname: string
-          limits?: number
-          levels?: number
-          offsets?: number
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          name: string
-          id: string
-          updated_at: string
-          created_at: string
-          last_accessed_at: string
-          metadata: Json
-        }[]
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
     }
   }
 }
@@ -1605,3 +1346,17 @@ export type Enums<
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
     : never
 
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never

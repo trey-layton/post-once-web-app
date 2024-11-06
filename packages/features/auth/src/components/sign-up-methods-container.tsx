@@ -19,13 +19,14 @@ export function SignUpMethodsContainer(props: {
   };
 
   providers: {
-    password: boolean;
+    password?: boolean;
     magicLink: boolean;
     oAuth: Provider[];
   };
 
   displayTermsCheckbox?: boolean;
   inviteToken?: string;
+  referralCode?: string; // Add this line
 }) {
   const redirectUrl = getCallbackUrl(props);
   const defaultValues = getDefaultValues();
@@ -41,6 +42,7 @@ export function SignUpMethodsContainer(props: {
           emailRedirectTo={redirectUrl}
           defaultValues={defaultValues}
           displayTermsCheckbox={props.displayTermsCheckbox}
+          referralCode={props.referralCode}  // Add if needed
         />
       </If>
 
@@ -50,6 +52,7 @@ export function SignUpMethodsContainer(props: {
           redirectUrl={redirectUrl}
           shouldCreateUser={true}
           defaultValues={defaultValues}
+          referralCode={props.referralCode}  // Add if needed
           displayTermsCheckbox={props.displayTermsCheckbox}
         />
       </If>
@@ -60,6 +63,7 @@ export function SignUpMethodsContainer(props: {
         <OauthProviders
           enabledProviders={props.providers.oAuth}
           inviteToken={props.inviteToken}
+          referralCode={props.referralCode}  // Add if needed
           shouldCreateUser={true}
           paths={{
             callback: props.paths.callback,
@@ -78,6 +82,8 @@ function getCallbackUrl(props: {
   };
 
   inviteToken?: string;
+  referralCode?: string;
+
 }) {
   if (!isBrowser()) {
     return '';
@@ -89,6 +95,9 @@ function getCallbackUrl(props: {
 
   if (props.inviteToken) {
     url.searchParams.set('invite_token', props.inviteToken);
+  }
+  if (props.referralCode) {
+    url.searchParams.set('referralCode', props.referralCode);
   }
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -108,8 +117,9 @@ function getDefaultValues() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const inviteToken = searchParams.get('invite_token');
+  const referralCode = searchParams.get('referralCode');  // Add this line
 
-  if (!inviteToken) {
+  if (!inviteToken && !referralCode) {
     return { email: '' };
   }
 

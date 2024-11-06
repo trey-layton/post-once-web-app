@@ -7,6 +7,7 @@ interface Credentials {
   password: string;
   emailRedirectTo: string;
   captchaToken?: string;
+  referralCode?: string; // Add this line
 }
 
 export function useSignUpWithEmailAndPassword() {
@@ -14,13 +15,16 @@ export function useSignUpWithEmailAndPassword() {
   const mutationKey = ['auth', 'sign-up-with-email-password'];
 
   const mutationFn = async (params: Credentials) => {
-    const { emailRedirectTo, captchaToken, ...credentials } = params;
+    const { emailRedirectTo, captchaToken, referralCode, ...credentials } = params; // Add referralCode here
 
     const response = await client.auth.signUp({
       ...credentials,
       options: {
         emailRedirectTo,
         captchaToken,
+        data: { // Add this object
+          referralCode, // Include referralCode in the user metadata
+        },
       },
     });
 

@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { BillingConfig, BillingWebhookHandlerService } from '@kit/billing';
 import { getLogger } from '@kit/shared/logger';
 import { Database } from '@kit/supabase/database';
+import { createClient } from '@supabase/supabase-js';
 
 import { StripeServerEnvSchema } from '../schema/stripe-server-env.schema';
 import { createStripeClient } from './stripe-sdk';
@@ -11,6 +12,10 @@ import { createStripeSubscriptionPayloadBuilderService } from './stripe-subscrip
 type UpsertSubscriptionParams =
   Database['public']['Functions']['upsert_subscription']['Args'] & {
     line_items: Array<LineItem>;
+    metadata?: {
+      referralCode?: string;
+      userId?: string;
+    };
   };
 
 interface LineItem {
@@ -156,39 +161,56 @@ export class StripeWebhookHandlerService
     ) => Promise<unknown>,
   ) {
     const stripe = await this.loadStripe();
-
     const session = event.data.object;
-    const isSubscription = session.mode === 'subscription';
+    
+  // Get referral data from session metadata
+  const referralCode = session.metadata?.referralCode;
+  const userId = session.metadata?.userId;
+  
+  // Handle referral update independently
+  if (referralCode && userId) {
+    const { error } = await this.updateReferralStatus(referralCode, userId, session);
+    if (error) {
+      const Logger = await getLogger();
+      Logger.error(
+        {
+          error,
+          referralCode,
+          userId,
+          sessionId: session.id,
+        },
+        'Failed to update referral status'
+      );
+    }
+  }
+  // Continue with normal subscription handling
+  const isSubscription = session.mode === 'subscription';
+  const accountId = session.client_reference_id!;
+  const customerId = session.customer as string;
 
-    const accountId = session.client_reference_id!;
-    const customerId = session.customer as string;
+  if (isSubscription) {
+    const subscriptionPayloadBuilderService =
+      createStripeSubscriptionPayloadBuilderService();
 
-    // if it's a subscription, we need to retrieve the subscription
-    // and build the payload for the subscription
-    if (isSubscription) {
-      const subscriptionPayloadBuilderService =
-        createStripeSubscriptionPayloadBuilderService();
-
-      const subscriptionId = session.subscription as string;
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
+    const subscriptionId = session.subscription as string;
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const payload = subscriptionPayloadBuilderService
-        .withBillingConfig(this.config)
-        .build({
-          accountId,
-          customerId,
-          id: subscription.id,
-          lineItems: subscription.items.data,
-          status: subscription.status,
-          currency: subscription.currency,
-          periodStartsAt: subscription.current_period_start,
-          periodEndsAt: subscription.current_period_end,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          trialStartsAt: subscription.trial_start,
-          trialEndsAt: subscription.trial_end,
-        });
+      .withBillingConfig(this.config)
+      .build({
+        accountId,
+        customerId,
+        id: subscription.id,
+        lineItems: subscription.items.data,
+        status: subscription.status,
+        currency: subscription.currency,
+        periodStartsAt: subscription.current_period_start,
+        periodEndsAt: subscription.current_period_end,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        trialStartsAt: subscription.trial_start,
+        trialEndsAt: subscription.trial_end,
+      });
 
-      return onCheckoutCompletedCallback(payload);
+    return onCheckoutCompletedCallback(payload);
     } else {
       // if it's a one-time payment, we need to retrieve the session
       const sessionId = event.data.object.id;
@@ -230,6 +252,35 @@ export class StripeWebhookHandlerService
       return onCheckoutCompletedCallback(payload);
     }
   }
+
+// Add this new private method to handle referral updates
+private async updateReferralStatus(
+  referralCode: string, 
+  userId: string, 
+  session: Stripe.Checkout.Session
+) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+      },
+    }
+  );
+
+  return await supabase
+    .from('referrals')
+    .update({
+      subscription_id: session.subscription?.toString() || '',
+      status: 'completed'
+    })
+    .match({
+      referral_code: referralCode,
+      referred_user_id: userId,
+      status: 'pending'
+    });
+}
 
   private handleAsyncPaymentFailed(
     event: Stripe.CheckoutSessionAsyncPaymentFailedEvent,

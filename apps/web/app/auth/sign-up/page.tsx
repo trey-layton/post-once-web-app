@@ -21,6 +21,7 @@ export const generateMetadata = async () => {
 interface Props {
   searchParams: {
     invite_token?: string;
+    referralCode?: string;
   };
 }
 
@@ -31,6 +32,7 @@ const paths = {
 
 function SignUpPage({ searchParams }: Props) {
   const inviteToken = searchParams.invite_token;
+  const referralCode = searchParams.referralCode; // Add this line
 
   const signInPath =
     pathsConfig.auth.signIn +
@@ -46,6 +48,7 @@ function SignUpPage({ searchParams }: Props) {
         providers={authConfig.providers}
         displayTermsCheckbox={authConfig.displayTermsCheckbox}
         inviteToken={inviteToken}
+        referralCode={referralCode} // Pass it here
         paths={paths}
       />
 

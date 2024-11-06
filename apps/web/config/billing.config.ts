@@ -1,8 +1,41 @@
-/*
-Replace this file with your own billing configuration file.
-Copy it from billing.sample.config.ts and update the configuration to match your billing provider and products.
-This file will never be overwritten by git updates
- */
-import sampleSchema from './billing.sample.config';
+import { BillingProviderSchema, createBillingSchema } from '@kit/billing';
 
-export default sampleSchema;
+const provider = BillingProviderSchema.parse(
+  process.env.NEXT_PUBLIC_BILLING_PROVIDER,
+);
+
+export default createBillingSchema({
+  provider,
+  products: [
+    {
+      id: 'standard',
+      name: 'Standard',
+      description: 'The full package to manage your social media content.',
+      currency: 'USD',
+      badge: `Value`,
+      plans: [
+        {
+          name: 'Standard Monthly',
+          id: 'standard-monthly',
+          paymentType: 'recurring',
+          interval: 'month',
+          trialDays: 14,
+          lineItems: [
+            {
+              // Use your actual Stripe Price ID here
+              id: 'price_YOUR_ACTUAL_PRICE_ID',
+              name: 'Base Price',
+              cost: 14.99,
+              type: 'flat' as const,
+            },
+          ],
+        },
+      ],
+      features: [
+        'LinkedIn & Twitter integrations',
+        'Content Generation',
+        'Content Scheduling & Posting',
+      ],
+    },
+  ],
+});
