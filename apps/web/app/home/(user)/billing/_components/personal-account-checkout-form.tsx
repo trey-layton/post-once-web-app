@@ -85,21 +85,24 @@ export function PersonalAccountCheckoutForm(props: {
             config={billingConfig}
             canStartTrial={canStartTrial}
             onSubmit={({ planId, productId }) => {
+              console.log('Plan selected:', { planId, productId }); // Add this
               startTransition(async () => {
                 try {
+                  console.log('Starting checkout...'); // Add this
                   appEvents.emit({
                     type: 'checkout.started',
                     payload: { planId },
                   });
-
-                  const { checkoutToken } =
-                    await createPersonalAccountCheckoutSession({
-                      planId,
-                      productId,
-                    });
-
+            
+                  const { checkoutToken } = await createPersonalAccountCheckoutSession({
+                    planId,
+                    productId,
+                  });
+            
+                  console.log('Received checkout token:', checkoutToken); // Add this
                   setCheckoutToken(checkoutToken);
                 } catch (e) {
+                  console.error('Checkout error:', e); // Add this
                   setError(true);
                 }
               });
